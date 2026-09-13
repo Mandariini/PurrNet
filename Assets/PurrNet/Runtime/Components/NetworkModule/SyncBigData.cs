@@ -514,6 +514,9 @@ namespace PurrNet
                 confirmedParts = DisposableList<int>.Create()
             };
 
+            // Relayed transfers and late observers must use the ID of the data we received.
+            // Keeping the previous ID makes existing observers discard replacements as duplicates.
+            _nextId = tid;
             _totalParts = totalParts;
 
             if (_compressedData == null)
