@@ -27,7 +27,9 @@ MonoBehaviour:
     PublicKeyToken=null
   - UnityEngine.Transform, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral,
     PublicKeyToken=null
-  assets: []
+  assets:
+  - {fileID: 1632500921576143915, guid: 382542205df2d9042b1b09771e6f34ab, type: 3}
+  - {fileID: 6542352001094509675, guid: 382542205df2d9042b1b09771e6f34ab, type: 3}
   _availableTypeNames:
   - UnityEngine.Material, UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral,
     PublicKeyToken=null
@@ -355,7 +357,13 @@ MonoBehaviour:
     Culture=neutral, PublicKeyToken=null
   - UnityEditor.XR.Simulation.XRSimulationSettings, Unity.XR.Simulation.Editor, Version=0.0.0.0,
     Culture=neutral, PublicKeyToken=null
-  _assetGuids: []
-  _bakedIds: 
-  _bakedAssets: []
-  _bakedPersistentIds: []
+  _assetGuids:
+  - 382542205df2d9042b1b09771e6f34ab
+  - 382542205df2d9042b1b09771e6f34ab
+  _bakedIds: 0000000001000000
+  _bakedAssets:
+  - {fileID: 1632500921576143915, guid: 382542205df2d9042b1b09771e6f34ab, type: 3}
+  - {fileID: 6542352001094509675, guid: 382542205df2d9042b1b09771e6f34ab, type: 3}
+  _bakedPersistentIds:
+  - 382542205df2d9042b1b09771e6f34ab
+  - 382542205df2d9042b1b09771e6f34ab
