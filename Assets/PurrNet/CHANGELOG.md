@@ -1,3 +1,10 @@
+# [1.24.0-beta.1](https://github.com/PurrNet/PurrNet/compare/v1.23.1-beta.4...v1.24.0-beta.1) (2026-09-13)
+
+
+### Features
+
+* Network Rigidbody 2D base ([cdc23f7](https://github.com/PurrNet/PurrNet/commit/cdc23f7891fd272309a82b1826188809f864d9f5))
+
 ## [1.23.1-beta.4](https://github.com/PurrNet/PurrNet/compare/v1.23.1-beta.3...v1.23.1-beta.4) (2026-09-13)
 
 
