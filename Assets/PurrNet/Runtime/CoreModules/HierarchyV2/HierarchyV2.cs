@@ -636,7 +636,7 @@ namespace PurrNet.Modules
                 var nt = identity.GetComponent<NetworkTransform>();
                 if (nt) nt.StartIgnoringParentChanges();
 
-                var nrb = identity.GetComponent<NetworkRigidbody>();
+                var nrb = identity.GetComponent<NetworkRigidbodyBase>();
                 if (nrb) nrb.StartIgnoringParentChanges();
 
                 if (parent)

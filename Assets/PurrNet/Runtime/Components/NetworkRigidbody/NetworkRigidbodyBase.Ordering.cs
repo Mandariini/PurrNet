@@ -1,6 +1,6 @@
 namespace PurrNet
 {
-    public partial class NetworkRigidbody
+    public abstract partial class NetworkRigidbodyBase
     {
         // This source counter stays monotonic across authority changes so an in-flight packet
         // from an earlier ownership stint cannot hold a re-acquired controller below its value.
@@ -193,7 +193,7 @@ namespace PurrNet
 
         private void BroadcastServerAuthorityTransition(PlayerID? primaryTarget, PlayerID? secondaryTarget)
         {
-            if (!isServer || !_ownerAuth || !isSpawned || !_rigidbody)
+            if (!isServer || !_ownerAuth || !isSpawned || !hasBody)
                 return;
 
             if (!TryRecordServerAuthorityTransition())
