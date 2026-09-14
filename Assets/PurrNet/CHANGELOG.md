@@ -1,3 +1,10 @@
+# [1.24.0-beta.3](https://github.com/PurrNet/PurrNet/compare/v1.24.0-beta.2...v1.24.0-beta.3) (2026-09-14)
+
+
+### Bug Fixes
+
+* allow to sync transform from the rollback module ([d32329d](https://github.com/PurrNet/PurrNet/commit/d32329dfec7f562f06e335e31a13d6e375e118d0))
+
 # [1.24.0-beta.2](https://github.com/PurrNet/PurrNet/compare/v1.24.0-beta.1...v1.24.0-beta.2) (2026-09-14)
 
 
