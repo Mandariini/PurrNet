@@ -1,3 +1,17 @@
+# [1.24.0-beta.1](https://github.com/PurrNet/PurrNet/compare/v1.23.1-beta.4...v1.24.0-beta.1) (2026-09-13)
+
+
+### Features
+
+* Network Rigidbody 2D base ([cdc23f7](https://github.com/PurrNet/PurrNet/commit/cdc23f7891fd272309a82b1826188809f864d9f5))
+
+## [1.23.1-beta.4](https://github.com/PurrNet/PurrNet/compare/v1.23.1-beta.3...v1.23.1-beta.4) (2026-09-13)
+
+
+### Bug Fixes
+
+* equality wasn't bit accurate, for example Vector3 uses a distance check; this broke PurrDiction under specific situations with determinism ([0a07e80](https://github.com/PurrNet/PurrNet/commit/0a07e803875e47b7a102034d914415fe0ad016b7))
+
 ## [1.23.1-beta.3](https://github.com/PurrNet/PurrNet/compare/v1.23.1-beta.2...v1.23.1-beta.3) (2026-09-13)
 
 

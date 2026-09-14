@@ -1,34 +1,34 @@
-#if UNITY_PHYSICS_3D
+#if UNITY_PHYSICS_2D
 using System;
 using PurrNet.Packing;
 using UnityEngine;
 
 namespace PurrNet
 {
-    [AddComponentMenu("PurrNet/Network Rigidbody")]
-    public class NetworkRigidbody : NetworkRigidbodyBase
+    [AddComponentMenu("PurrNet/Network Rigidbody 2D")]
+    public class NetworkRigidbody2D : NetworkRigidbodyBase
     {
         [Header("Settings Override")]
         [Tooltip("Optional. When assigned, this asset's Create() builds a per-instance correction object that controls all correction decisions. The correction fields above are passed as defaults via the correction context.")]
-        [SerializeField] private NetworkRigidbodySettings _settingsOverride;
+        [SerializeField] private NetworkRigidbody2DSettings _settingsOverride;
 
         /// <summary>
         /// Fired after this rigidbody applies a hard position correction teleport.
         /// </summary>
-        public event Action<RigidbodyCorrectionContext> onTeleportCorrection;
+        public event Action<Rigidbody2DCorrectionContext> onTeleportCorrection;
 
-        private Rigidbody _cachedRigidbody;
-        private Rigidbody _rigidbody => _cachedRigidbody ? _cachedRigidbody : (_cachedRigidbody = GetComponent<Rigidbody>());
+        private Rigidbody2D _cachedRigidbody;
+        private Rigidbody2D _rigidbody => _cachedRigidbody ? _cachedRigidbody : (_cachedRigidbody = GetComponent<Rigidbody2D>());
 
         private Transform _parentPoseTransform;
-        private Rigidbody _parentPoseRigidbody;
+        private Rigidbody2D _parentPoseRigidbody;
 
         private void Awake()
         {
-            _cachedRigidbody = GetComponent<Rigidbody>();
+            _cachedRigidbody = GetComponent<Rigidbody2D>();
         }
 
-        public NetworkRigidbodySettings settingsOverride
+        public NetworkRigidbody2DSettings settingsOverride
         {
             get => _settingsOverride;
             set
@@ -41,7 +41,7 @@ namespace PurrNet
             }
         }
 
-        public NetworkRigidbodySettingsInstance settingsInstance => settingsInstanceInternal as NetworkRigidbodySettingsInstance;
+        public NetworkRigidbody2DSettingsInstance settingsInstance => settingsInstanceInternal as NetworkRigidbody2DSettingsInstance;
 
         protected override UnityEngine.Object settingsOverrideAsset => _settingsOverride;
 
@@ -49,7 +49,7 @@ namespace PurrNet
 
         internal override void RaiseTeleportCorrection(in RigidbodyCorrectionData data)
         {
-            onTeleportCorrection?.Invoke(NetworkRigidbodySettingsInstance.ToContext(in data));
+            onTeleportCorrection?.Invoke(NetworkRigidbody2DSettingsInstance.ToContext(in data));
         }
 
         protected override Component bodyComponent => _rigidbody;
@@ -62,20 +62,20 @@ namespace PurrNet
 
         protected override Quaternion bodyRotation
         {
-            get => _rigidbody.rotation;
-            set => _rigidbody.rotation = value;
+            get => NetworkRigidbody2DPhysics.ToQuaternion(_rigidbody.rotation);
+            set => _rigidbody.rotation = NetworkRigidbody2DPhysics.ToAngle(value, _rigidbody.rotation);
         }
 
         protected override Vector3 bodyLinearVelocity
         {
-            get => NetworkRigidbodyPhysics.GetLinearVelocity(_rigidbody);
-            set => NetworkRigidbodyPhysics.SetLinearVelocity(_rigidbody, value);
+            get => NetworkRigidbody2DPhysics.GetLinearVelocity(_rigidbody);
+            set => NetworkRigidbody2DPhysics.SetLinearVelocity(_rigidbody, value);
         }
 
         protected override Vector3 bodyAngularVelocity
         {
-            get => _rigidbody.angularVelocity;
-            set => NetworkRigidbodyPhysics.SetAngularVelocity(_rigidbody, value);
+            get => NetworkRigidbody2DPhysics.ToAngularVelocity(_rigidbody.angularVelocity);
+            set => NetworkRigidbody2DPhysics.SetAngularVelocity(_rigidbody, NetworkRigidbody2DPhysics.ToDegreesPerSecond(value));
         }
 
         protected override float bodyMass
@@ -108,38 +108,47 @@ namespace PurrNet
 
         protected override bool bodyIsKinematic
         {
-            get => _rigidbody.isKinematic;
-            set => _rigidbody.isKinematic = value;
+            get => _rigidbody.bodyType != RigidbodyType2D.Dynamic;
+            set
+            {
+                if (!value)
+                    _rigidbody.bodyType = RigidbodyType2D.Dynamic;
+                else if (_rigidbody.bodyType == RigidbodyType2D.Dynamic)
+                    _rigidbody.bodyType = RigidbodyType2D.Kinematic;
+            }
         }
 
         protected override bool bodyIsSleeping => _rigidbody.IsSleeping();
 
-        protected override bool bodyHasFrozenRotation => (_rigidbody.constraints & RigidbodyConstraints.FreezeRotation) != 0;
+        protected override bool bodyHasFrozenRotation => (_rigidbody.constraints & RigidbodyConstraints2D.FreezeRotation) != 0;
 
-        protected override bool canApplyDynamicMotion => NetworkRigidbodyPhysics.CanApplyDynamicMotion(_rigidbody);
+        protected override bool canApplyDynamicMotion => NetworkRigidbody2DPhysics.CanApplyDynamicMotion(_rigidbody);
 
         protected override void MoveBodyPosition(Vector3 position) => _rigidbody.MovePosition(position);
 
-        protected override void MoveBodyRotation(Quaternion rotation) => _rigidbody.MoveRotation(rotation);
+        protected override void MoveBodyRotation(Quaternion rotation)
+        {
+            _rigidbody.MoveRotation(NetworkRigidbody2DPhysics.ToAngle(rotation, _rigidbody.rotation));
+        }
 
         protected override void AddBodyForce(Vector3 force, NetworkForceMode mode)
         {
-            NetworkRigidbodyPhysics.AddForce(_rigidbody, force, (ForceMode)mode);
+            NetworkRigidbody2DPhysics.AddForce(_rigidbody, force, mode);
         }
 
         protected override void AddBodyForceAtPosition(Vector3 force, Vector3 position, NetworkForceMode mode)
         {
-            NetworkRigidbodyPhysics.AddForceAtPosition(_rigidbody, force, position, (ForceMode)mode);
+            NetworkRigidbody2DPhysics.AddForceAtPosition(_rigidbody, force, position, mode);
         }
 
         protected override void AddBodyTorque(Vector3 torque, NetworkForceMode mode)
         {
-            NetworkRigidbodyPhysics.AddTorque(_rigidbody, torque, (ForceMode)mode);
+            NetworkRigidbody2DPhysics.AddTorque(_rigidbody, torque.z, mode);
         }
 
         protected override void ApplyBodyPositionSpring(Vector3 targetPosition, Vector3 targetLinearVelocity, float positionError, float positionStrength, float correctionRange)
         {
-            NetworkRigidbodyPhysics.ApplyPositionSpring(
+            NetworkRigidbody2DPhysics.ApplyPositionSpring(
                 _rigidbody,
                 targetPosition,
                 targetLinearVelocity,
@@ -151,7 +160,12 @@ namespace PurrNet
 
         protected override void ApplyBodyRotationSpring(Quaternion targetRotation, Vector3 targetAngularVelocity, float rotationStrength, bool kinematic)
         {
-            NetworkRigidbodyPhysics.ApplyRotationSpring(_rigidbody, targetRotation, targetAngularVelocity, rotationStrength, kinematic);
+            NetworkRigidbody2DPhysics.ApplyRotationSpring(
+                _rigidbody,
+                NetworkRigidbody2DPhysics.ToAngle(targetRotation, _rigidbody.rotation),
+                NetworkRigidbody2DPhysics.ToDegreesPerSecond(targetAngularVelocity),
+                rotationStrength,
+                kinematic);
         }
 
         protected override RigidbodySettingsData GetCurrentSettings()
@@ -164,8 +178,8 @@ namespace PurrNet
                 mass = (Half)_rigidbody.mass,
                 drag = (Half)bodyDrag,
                 angularDrag = (Half)bodyAngularDrag,
-                useGravity = _rigidbody.useGravity,
-                isKinematic = _rigidbody.isKinematic
+                gravityScale = (Half)_rigidbody.gravityScale,
+                isKinematic = bodyIsKinematic
             };
         }
 
@@ -174,16 +188,16 @@ namespace PurrNet
             _rigidbody.mass = settings.mass;
             bodyDrag = settings.drag;
             bodyAngularDrag = settings.angularDrag;
-            _rigidbody.useGravity = settings.useGravity;
-            _rigidbody.isKinematic = settings.isKinematic;
+            _rigidbody.gravityScale = settings.gravityScale;
+            bodyIsKinematic = settings.isKinematic;
         }
 
-        private Rigidbody ResolveParentRigidbody(Transform parent)
+        private Rigidbody2D ResolveParentRigidbody(Transform parent)
         {
             if (_parentPoseTransform != parent)
             {
                 _parentPoseTransform = parent;
-                _parentPoseRigidbody = parent ? parent.GetComponentInParent<Rigidbody>() : null;
+                _parentPoseRigidbody = parent ? parent.GetComponentInParent<Rigidbody2D>() : null;
                 if (_parentPoseRigidbody == _rigidbody)
                     _parentPoseRigidbody = null;
             }
@@ -203,8 +217,9 @@ namespace PurrNet
             }
 
             bodyTransform = rb.transform;
-            position = rb.position;
-            rotation = rb.rotation;
+            var bodyPosition2D = rb.position;
+            position = new Vector3(bodyPosition2D.x, bodyPosition2D.y, bodyTransform.position.z);
+            rotation = NetworkRigidbody2DPhysics.ToQuaternion(rb.rotation);
             return true;
         }
 
@@ -219,8 +234,8 @@ namespace PurrNet
                 return false;
             }
 
-            linearVelocity = NetworkRigidbodyPhysics.GetLinearVelocity(rb);
-            angularVelocity = rb.angularVelocity;
+            linearVelocity = NetworkRigidbody2DPhysics.GetLinearVelocity(rb);
+            angularVelocity = NetworkRigidbody2DPhysics.ToAngularVelocity(rb.angularVelocity);
             worldCenterOfMass = rb.worldCenterOfMass;
             return true;
         }
@@ -231,76 +246,102 @@ namespace PurrNet
             _parentPoseRigidbody = null;
         }
 
-        public Vector3 linearVelocity
+        public Vector2 linearVelocity
         {
-            get => _rigidbody ? bodyLinearVelocity : Vector3.zero;
-            set { if (_rigidbody) bodyLinearVelocity = value; }
+            get => _rigidbody ? NetworkRigidbody2DPhysics.GetLinearVelocity(_rigidbody) : Vector2.zero;
+            set { if (_rigidbody) NetworkRigidbody2DPhysics.SetLinearVelocity(_rigidbody, value); }
         }
 
         /// <summary>Pre-Unity 6 alias for linearVelocity.</summary>
-        public Vector3 velocity
+        public Vector2 velocity
         {
             get => linearVelocity;
             set => linearVelocity = value;
         }
 
-        public Vector3 angularVelocity
+        /// <summary>Angular velocity in degrees per second, matching <see cref="Rigidbody2D.angularVelocity"/>.</summary>
+        public float angularVelocity
         {
-            get => _rigidbody ? _rigidbody.angularVelocity : Vector3.zero;
-            set { if (_rigidbody) bodyAngularVelocity = value; }
+            get => _rigidbody ? _rigidbody.angularVelocity : 0f;
+            set { if (_rigidbody) NetworkRigidbody2DPhysics.SetAngularVelocity(_rigidbody, value); }
         }
 
-        public Vector3 position
+        public Vector2 position
         {
-            get => _rigidbody ? _rigidbody.position : transform.position;
+            get => _rigidbody ? _rigidbody.position : (Vector2)transform.position;
             set { if (_rigidbody) _rigidbody.position = value; }
         }
 
-        public Quaternion rotation
+        /// <summary>Rotation in degrees, matching <see cref="Rigidbody2D.rotation"/>.</summary>
+        public float rotation
         {
-            get => _rigidbody ? _rigidbody.rotation : transform.rotation;
+            get => _rigidbody ? _rigidbody.rotation : transform.eulerAngles.z;
             set { if (_rigidbody) _rigidbody.rotation = value; }
         }
 
-        public bool useGravity
+        public float gravityScale
         {
-            get => _rigidbody && _rigidbody.useGravity;
+            get => _rigidbody ? _rigidbody.gravityScale : 0f;
             set
             {
                 if (!_rigidbody)
                     return;
-                _rigidbody.useGravity = value;
+                _rigidbody.gravityScale = value;
                 SyncSettingsIfChanged();
             }
         }
 
-        public void AddForce(Vector3 force, ForceMode mode = ForceMode.Force)
+        public RigidbodyType2D bodyType
         {
-            AddForceInternal(force, (NetworkForceMode)mode);
+            get => _rigidbody ? _rigidbody.bodyType : RigidbodyType2D.Dynamic;
+            set
+            {
+                if (!_rigidbody)
+                    return;
+                _rigidbody.bodyType = value;
+                SyncSettingsIfChanged();
+            }
         }
 
-        public void AddForceAtPosition(Vector3 force, Vector3 position, ForceMode mode = ForceMode.Force)
+        public void AddForce(Vector2 force, ForceMode2D mode = ForceMode2D.Force)
         {
-            AddForceAtPositionInternal(force, position, (NetworkForceMode)mode);
+            AddForceInternal(force, NetworkRigidbody2DPhysics.ToNetworkForceMode(mode));
         }
 
-        public void AddTorque(Vector3 torque, ForceMode mode = ForceMode.Force)
+        public void AddForceAtPosition(Vector2 force, Vector2 position, ForceMode2D mode = ForceMode2D.Force)
         {
-            AddTorqueInternal(torque, (NetworkForceMode)mode);
+            AddForceAtPositionInternal(force, position, NetworkRigidbody2DPhysics.ToNetworkForceMode(mode));
         }
 
-        public void MovePosition(Vector3 position)
+        public void AddTorque(float torque, ForceMode2D mode = ForceMode2D.Force)
+        {
+            AddTorqueInternal(new Vector3(0f, 0f, torque), NetworkRigidbody2DPhysics.ToNetworkForceMode(mode));
+        }
+
+        public void MovePosition(Vector2 position)
         {
             if (!_rigidbody)
                 return;
             _rigidbody.MovePosition(position);
         }
 
-        public void MoveRotation(Quaternion rotation)
+        public void MoveRotation(float rotation)
         {
             if (!_rigidbody)
                 return;
             _rigidbody.MoveRotation(rotation);
+        }
+
+        /// <summary>2D overload of <see cref="NetworkRigidbodyBase.TeleportTo(Vector3, Quaternion)"/>; rotation in degrees.</summary>
+        public void TeleportTo(Vector2 position, float rotation)
+        {
+            TeleportTo((Vector3)position, NetworkRigidbody2DPhysics.ToQuaternion(rotation));
+        }
+
+        /// <summary>2D overload of <see cref="NetworkRigidbodyBase.TeleportLocal(Vector3, Quaternion)"/>; rotation in degrees.</summary>
+        public void TeleportLocal(Vector2 position, float rotation)
+        {
+            TeleportLocal((Vector3)position, NetworkRigidbody2DPhysics.ToQuaternion(rotation));
         }
     }
 }
