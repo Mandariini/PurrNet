@@ -3365,6 +3365,21 @@ namespace PurrNet.Modules
             return new NetworkID(_nextId++, _playersManager.localPlayerId ?? default);
         }
 
+        /// <summary>
+        /// Reserves <paramref name="count"/> consecutive network IDs and returns the first one.
+        /// The others are <c>new NetworkID(first, offset)</c> for offsets below <paramref name="count"/>.
+        /// </summary>
+        [PublicAPI]
+        public NetworkID ReserveNetworkIDs(int count)
+        {
+            if (count <= 0)
+                throw new ArgumentOutOfRangeException(nameof(count));
+
+            var first = ReserveNetworkID();
+            _nextId += (ulong)(count - 1);
+            return first;
+        }
+
         private void SpawnSceneObject(List<NetworkIdentity> children)
         {
             bool isHost = IsServerHost();
@@ -4313,14 +4328,20 @@ namespace PurrNet.Modules
         /// </summary>
         public void ManualDespawn(NetworkIdentity identity)
         {
-            if (!_asServer)
+            if (_asServer)
+            {
+                var observersCopy = ListPool<PlayerID>.Instantiate();
+                observersCopy.AddRange(identity.observers);
+                for (var i = 0; i < observersCopy.Count; i++)
+                    ManualRemoveObserver(identity, observersCopy[i]);
+                ListPool<PlayerID>.Destroy(observersCopy);
+            }
+            else if (!identity.IsSpawned(false))
+            {
+                // Clients mirror server-driven manual spawns; an identity the client never
+                // spawned has nothing to tear down.
                 return;
-
-            var observersCopy = ListPool<PlayerID>.Instantiate();
-            observersCopy.AddRange(identity.observers);
-            for (var i = 0; i < observersCopy.Count; i++)
-                ManualRemoveObserver(identity, observersCopy[i]);
-            ListPool<PlayerID>.Destroy(observersCopy);
+            }
 
             TriggerDespawnEvent(identity);
             UnregisterIdentity(identity);
