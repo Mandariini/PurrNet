@@ -132,7 +132,6 @@ namespace PurrNet.Modules
         }
 #endif
 
-
 #if UNITY_PHYSICS_3D
         /// <summary>
         /// Tries to get the state of a collider at a precise tick in the past.
@@ -213,6 +212,22 @@ namespace PurrNet.Modules
             }
 
             return false;
+        }
+#endif
+
+#if UNITY_PHYSICS_3D
+        private static void SyncPhysicsTransforms3D()
+        {
+            if (!Physics.autoSyncTransforms)
+                Physics.SyncTransforms();
+        }
+#endif
+
+#if UNITY_PHYSICS_2D
+        private static void SyncPhysicsTransforms2D()
+        {
+            if (!Physics2D.autoSyncTransforms)
+                Physics2D.SyncTransforms();
         }
 #endif
 
