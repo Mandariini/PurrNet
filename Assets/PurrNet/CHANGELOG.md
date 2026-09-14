@@ -1,3 +1,10 @@
+# [1.24.0-beta.2](https://github.com/PurrNet/PurrNet/compare/v1.24.0-beta.1...v1.24.0-beta.2) (2026-09-14)
+
+
+### Bug Fixes
+
+* reserve id blocks and allow client-side manual despawn ([ddddc45](https://github.com/PurrNet/PurrNet/commit/ddddc4574d7db81bb29c79c9595b20243954f7e0))
+
 # [1.24.0-beta.1](https://github.com/PurrNet/PurrNet/compare/v1.23.1-beta.4...v1.24.0-beta.1) (2026-09-13)
 
 
