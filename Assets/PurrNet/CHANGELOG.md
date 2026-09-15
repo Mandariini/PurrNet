@@ -1,3 +1,10 @@
+# [1.24.0-beta.4](https://github.com/PurrNet/PurrNet/compare/v1.24.0-beta.3...v1.24.0-beta.4) (2026-09-15)
+
+
+### Bug Fixes
+
+* dont rely on auto sync here ([3b23e6e](https://github.com/PurrNet/PurrNet/commit/3b23e6ecebb24708b996e4b1e5f00f1855769501))
+
 # [1.24.0-beta.3](https://github.com/PurrNet/PurrNet/compare/v1.24.0-beta.2...v1.24.0-beta.3) (2026-09-14)
 
 
