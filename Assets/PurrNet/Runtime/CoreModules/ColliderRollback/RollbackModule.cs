@@ -216,19 +216,11 @@ namespace PurrNet.Modules
 #endif
 
 #if UNITY_PHYSICS_3D
-        private static void SyncPhysicsTransforms3D()
-        {
-            if (!Physics.autoSyncTransforms)
-                Physics.SyncTransforms();
-        }
+        private static void SyncPhysicsTransforms3D() => Physics.SyncTransforms();
 #endif
 
 #if UNITY_PHYSICS_2D
-        private static void SyncPhysicsTransforms2D()
-        {
-            if (!Physics2D.autoSyncTransforms)
-                Physics2D.SyncTransforms();
-        }
+        private static void SyncPhysicsTransforms2D() => Physics2D.SyncTransforms();
 #endif
 
         public void OnPostTick()
