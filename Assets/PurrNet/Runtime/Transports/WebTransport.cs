@@ -28,12 +28,9 @@ namespace PurrNet.Transports
         [Tooltip("The path to add to the address.\nEx: '/game' results in ws://localhost:5001/game")] [SerializeField]
         private string _path = "";
 
-        // TODO: Implement timeout
-        /*[Header("Shared Settings")]
-        [Tooltip("The amount of time in seconds before socket is disconnected due to no data being received.")]
-        [SerializeField] private float _timeoutInSeconds = 5f;*/
-
         [Header("Shared Settings")]
+        [Tooltip("The amount of time in seconds before socket is disconnected due to no data being received.")]
+        [SerializeField] private float _timeoutInSeconds = 5f;
 
         [Header("SSL Settings")] [SerializeField]
         private bool _enableSSL;
@@ -119,7 +116,7 @@ namespace PurrNet.Transports
 
         public override bool isSupported => true;
 
-        readonly TcpConfig _tcpConfig = new(noDelay: true, sendTimeout: 0, receiveTimeout: 0);
+        TcpConfig _tcpConfig;
 
         public bool SupportsChannel(Channel channel)
         {
@@ -136,7 +133,11 @@ namespace PurrNet.Transports
         private void Awake()
         {
             CleanupServer();
+
+            var timeoutMs = Mathf.RoundToInt(_timeoutInSeconds * 1000);
+            _tcpConfig = new TcpConfig(noDelay: true, sendTimeout: timeoutMs, receiveTimeout: timeoutMs);
             _client = SimpleWebClient.Create(ushort.MaxValue, 5000, _tcpConfig);
+
             _client.onConnect += OnClientConnected;
             _client.onDisconnect += OnClientDisconnected;
             _client.onData += OnClientReceivedData;
