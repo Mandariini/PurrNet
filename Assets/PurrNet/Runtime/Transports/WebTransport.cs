@@ -268,12 +268,19 @@ namespace PurrNet.Transports
             SendHeartbeatsIfDue(delta);
         }
 
+
+        float last;
         private void SendHeartbeatsIfDue(float delta)
         {
+            if (_timeoutInSeconds <= 0f) return;
+
             _heartbeatTimer += delta;
             if (_heartbeatTimer < _timeoutInSeconds / 3f) return;
             _heartbeatTimer = 0f;
 
+            float time = Time.time - last;
+            Debug.Log($"Time since last: {time}");
+            last = Time.time;
             if (clientState == ConnectionState.Connected)
             {
                 _client.Send(_heartbeat);
