@@ -1205,7 +1205,7 @@ namespace PurrNet.Modules
                     try
                     {
                         CancelPendingAsyncSpawnRoot(nid);
-                        Despawn(nid.gameObject, true, true);
+                        Despawn(nid.gameObject, true, true, packet.destroyAsync, UnityProxy.DEFAULT_DESTROY_ASYNC_MS);
                     }
                     catch (Exception e)
                     {
@@ -2135,7 +2135,7 @@ namespace PurrNet.Modules
             }
 
             CancelPendingAsyncSpawnRoot(identity);
-            Despawn(identity.gameObject, true, true);
+            Despawn(identity.gameObject, true, true, data.destroyAsync, UnityProxy.DEFAULT_DESTROY_ASYNC_MS);
         }
 
         private bool ConsumePendingLocalDespawnEcho(NetworkID identityId)
@@ -2838,7 +2838,8 @@ namespace PurrNet.Modules
             var packet = new DespawnPacket
             {
                 sceneId = _sceneId,
-                parentId = identityId
+                parentId = identityId,
+                destroyAsync = _despawnDestroyAsync
             };
 
             if (batched)
@@ -3081,7 +3082,7 @@ namespace PurrNet.Modules
                 return;
             }
 
-            if (id.isSpawned)
+            if (id.isSpawned || id.isDestroyingAsync)
                 return;
 
             if (!id.isSetup)
@@ -3222,6 +3223,14 @@ namespace PurrNet.Modules
 
         public void Despawn(GameObject gameObject, bool bypassPermissions = false, bool bypassBroadcast = false)
         {
+            Despawn(gameObject, bypassPermissions, bypassBroadcast, false, 0f);
+        }
+
+        private bool _despawnDestroyAsync;
+
+        internal void Despawn(GameObject gameObject, bool bypassPermissions, bool bypassBroadcast, bool destroyAsync,
+            float msPerFrame)
+        {
             var children = ListPool<NetworkIdentity>.Instantiate();
             GetComponentsInChildren(gameObject, children);
 
@@ -3268,6 +3277,9 @@ namespace PurrNet.Modules
             for (var i = 0; i < c; i++)
                 CompletePendingSpawnsFor(children[i], isHost);
 
+            bool wasDestroyAsync = _despawnDestroyAsync;
+            _despawnDestroyAsync = destroyAsync;
+
             if (_asServer)
             {
                 _visibility.ClearVisibilityForGameObject(children[0]);
@@ -3305,6 +3317,8 @@ namespace PurrNet.Modules
                 }
             }
 
+            _despawnDestroyAsync = wasDestroyAsync;
+
             for (var i = 0; i < c; i++)
             {
                 var child = children[i];
@@ -3316,7 +3330,7 @@ namespace PurrNet.Modules
             }
 
             var pair = new PoolPair(_scenePool, _prefabsPool);
-            HierarchyPool.PutBackInPool(pair, gameObject);
+            HierarchyPool.PutBackInPool(pair, gameObject, false, destroyAsync, msPerFrame);
 
             ListPool<NetworkIdentity>.Destroy(children);
         }
@@ -3465,7 +3479,7 @@ namespace PurrNet.Modules
 
             for (var i = 0; i < da.Count; i++)
             {
-                if (!da[i].parentId.Equals(db[i].parentId))
+                if (!da[i].parentId.Equals(db[i].parentId) || da[i].destroyAsync != db[i].destroyAsync)
                     return false;
             }
 

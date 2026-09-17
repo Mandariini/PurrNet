@@ -89,7 +89,7 @@ namespace PurrNet
             return (T)(Object)result;
         }
 
-        static bool OnDestroy(Object instance)
+        static bool OnDestroy(Object instance, bool destroyAsync = false, float msPerFrame = 0f)
         {
             if (ApplicationContext.isQuitting)
                 return true;
@@ -103,7 +103,10 @@ namespace PurrNet
             if (!go)
                 return true;
 
-            if (!go.GetComponentInChildren<NetworkIdentity>())
+            if (AsyncDestroyer.IsPending(go))
+                return false;
+
+            if (!go.GetComponentInChildren<NetworkIdentity>(destroyAsync))
                 return true;
 
             var identities = ListPool<NetworkIdentity>.Instantiate();
@@ -112,7 +115,7 @@ namespace PurrNet
             for (var i = 0; i < identities.Count; i++)
             {
                 var identity = identities[i];
-                identity.Despawn();
+                identity.Despawn(destroyAsync, msPerFrame);
             }
 
             ListPool<NetworkIdentity>.Destroy(identities);
@@ -815,6 +818,25 @@ namespace PurrNet
 
         public static void DestroyDirectly(Object obj)
             => Object.Destroy(obj);
+
+        public const float DEFAULT_DESTROY_ASYNC_MS = 0.5f;
+
+        public static void DestroyAsync(Object obj, float msPerFrame = DEFAULT_DESTROY_ASYNC_MS)
+        {
+            var go = obj as GameObject;
+
+            if (!go && obj is NetworkIdentity identity)
+                go = identity.gameObject;
+
+            if (!go)
+            {
+                Destroy(obj);
+                return;
+            }
+
+            if (OnDestroy(obj, true, msPerFrame))
+                AsyncDestroyer.Enqueue(go, msPerFrame);
+        }
 
         [UsedByIL]
         public static async void Destroy(Object obj, float t)

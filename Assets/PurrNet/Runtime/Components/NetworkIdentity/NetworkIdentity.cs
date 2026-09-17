@@ -939,14 +939,37 @@ namespace PurrNet
         [ContextMenu("PurrNet/Despawn"), PurrContextButton]
         public void Despawn()
         {
+            Despawn(false, 0f);
+        }
+
+        public bool isDestroyingAsync { get; private set; }
+
+        internal void Despawn(bool destroyAsync, float msPerFrame)
+        {
             if (isSpawned)
             {
                 if (_serverHierarchy != null)
-                    _serverHierarchy.Despawn(gameObject, false, false);
-                else _clientHierarchy?.Despawn(gameObject, false, false);
+                    _serverHierarchy.Despawn(gameObject, false, false, destroyAsync, msPerFrame);
+                else _clientHierarchy?.Despawn(gameObject, false, false, destroyAsync, msPerFrame);
             }
-            else if (!isInPool)
-                UnityProxy.DestroyDirectly(gameObject);
+            else if (!isInPool && !isDestroyingAsync)
+            {
+                if (destroyAsync)
+                    AsyncDestroyer.Enqueue(gameObject, msPerFrame);
+                else UnityProxy.DestroyDirectly(gameObject);
+            }
+        }
+
+        internal void PrepareForAsyncDestroy()
+        {
+            if (_parent)
+                _parent.RemoveDirectChild(this);
+
+            _parent = null;
+            _directChildren?.Clear();
+            _idServer = null;
+            _idClient = null;
+            isDestroyingAsync = true;
         }
 
         /// <summary>
