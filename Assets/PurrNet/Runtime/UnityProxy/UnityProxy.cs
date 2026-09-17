@@ -19,6 +19,9 @@ namespace PurrNet
     public static class UnityProxy
     {
         public delegate void AsyncInstantiateCompleted(Object original, Object instance);
+        static readonly Unity.Profiling.ProfilerMarker _destroyCollectIdentitiesMarker = new Unity.Profiling.ProfilerMarker("PurrNet.Destroy.CollectIdentities");
+        static readonly Unity.Profiling.ProfilerMarker _destroyDespawnLoopMarker = new Unity.Profiling.ProfilerMarker("PurrNet.Destroy.DespawnLoop");
+
 
         /// <summary>
         /// Invoked once for each network prefab instance successfully produced by
@@ -106,16 +109,25 @@ namespace PurrNet
             if (AsyncDestroyer.IsPending(go))
                 return false;
 
-            if (!go.GetComponentInChildren<NetworkIdentity>(destroyAsync))
-                return true;
-
             var identities = ListPool<NetworkIdentity>.Instantiate();
-            go.GetComponentsInChildren(true, identities);
-
-            for (var i = 0; i < identities.Count; i++)
+            using (_destroyCollectIdentitiesMarker.Auto())
             {
-                var identity = identities[i];
-                identity.Despawn(destroyAsync, msPerFrame);
+                if (!go.GetComponentInChildren<NetworkIdentity>(destroyAsync))
+                {
+                    ListPool<NetworkIdentity>.Destroy(identities);
+                    return true;
+                }
+
+                go.GetComponentsInChildren(true, identities);
+            }
+
+            using (_destroyDespawnLoopMarker.Auto())
+            {
+                for (var i = 0; i < identities.Count; i++)
+                {
+                    var identity = identities[i];
+                    identity.Despawn(destroyAsync, msPerFrame);
+                }
             }
 
             ListPool<NetworkIdentity>.Destroy(identities);

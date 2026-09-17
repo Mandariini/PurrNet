@@ -10,6 +10,10 @@ namespace PurrNet
     internal static class AsyncDestroyer
     {
         const int MAX_PENDING = 64;
+        static readonly Unity.Profiling.ProfilerMarker _prepareWalkMarker = new Unity.Profiling.ProfilerMarker("PurrNet.AsyncDestroy.Prepare.Walk");
+        static readonly Unity.Profiling.ProfilerMarker _prepareDeactivateMarker = new Unity.Profiling.ProfilerMarker("PurrNet.AsyncDestroy.Prepare.Deactivate");
+        static readonly Unity.Profiling.ProfilerMarker _prepareUnparentMarker = new Unity.Profiling.ProfilerMarker("PurrNet.AsyncDestroy.Prepare.Unparent");
+
 
         struct Entry
         {
@@ -79,7 +83,8 @@ namespace PurrNet
         static bool TryPrepare(GameObject go)
         {
             var identities = ListPool<NetworkIdentity>.Instantiate();
-            go.GetComponentsInChildren(true, identities);
+            using (_prepareWalkMarker.Auto())
+                go.GetComponentsInChildren(true, identities);
 
             for (var i = 0; i < identities.Count; i++)
             {
@@ -92,11 +97,17 @@ namespace PurrNet
 
             var trs = go.transform;
 
-            if (go.activeSelf)
-                go.SetActive(false);
+            using (_prepareDeactivateMarker.Auto())
+            {
+                if (go.activeSelf)
+                    go.SetActive(false);
+            }
 
-            if (trs.parent)
-                trs.SetParent(null, false);
+            using (_prepareUnparentMarker.Auto())
+            {
+                if (trs.parent)
+                    trs.SetParent(null, false);
+            }
 
             if (go.activeSelf || trs.parent)
             {
