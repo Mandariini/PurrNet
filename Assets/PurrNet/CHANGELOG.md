@@ -1,3 +1,10 @@
+# [1.24.0-beta.6](https://github.com/PurrNet/PurrNet/compare/v1.24.0-beta.5...v1.24.0-beta.6) (2026-09-17)
+
+
+### Bug Fixes
+
+* despawn and async destroy optimizations ([bba8b17](https://github.com/PurrNet/PurrNet/commit/bba8b179e9452da75440d38e7ae3eb19a7929dfb))
+
 # [1.24.0-beta.5](https://github.com/PurrNet/PurrNet/compare/v1.24.0-beta.4...v1.24.0-beta.5) (2026-09-17)
 
 
