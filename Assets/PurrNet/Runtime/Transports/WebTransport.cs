@@ -108,6 +108,12 @@ namespace PurrNet.Transports
         private SimpleWebServer _server;
         private SimpleWebClient _client;
 
+        private const byte HEART_BEAT_MARKER = 0xFF;
+        private static readonly ArraySegment<byte> _heartbeat = new ArraySegment<byte>(new byte[] { HEART_BEAT_MARKER });
+        private static bool IsHeartbeat(ArraySegment<byte> data) => data.Count == 1 && data.Array[data.Offset] == HEART_BEAT_MARKER;
+
+        private float _heartbeatTimer;
+
         public bool shouldClientSendKeepAlive => true;
 
         private readonly List<Connection> _connections = new List<Connection>();
@@ -214,6 +220,8 @@ namespace PurrNet.Transports
 
         private void OnClientReceivedData(ArraySegment<byte> data)
         {
+            if (IsHeartbeat(data)) return;
+
             var byteData = new ByteData(data.Array, data.Offset, data.Count);
             onDataReceived?.Invoke(new Connection(0), byteData, false);
         }
@@ -257,6 +265,28 @@ namespace PurrNet.Transports
         {
             _server?.ProcessMessageQueue();
             _client?.ProcessMessageQueue();
+            SendHeartbeatsIfDue(delta);
+        }
+
+        private void SendHeartbeatsIfDue(float delta)
+        {
+            _heartbeatTimer += delta;
+            if (_heartbeatTimer < _timeoutInSeconds / 3f) return;
+            _heartbeatTimer = 0f;
+
+            if (clientState == ConnectionState.Connected)
+            {
+                _client.Send(_heartbeat);
+            }
+
+            if (listenerState == ConnectionState.Connected)
+            {
+                for (int i = 0; i < _connections.Count; i++)
+                {
+                    _server.SendOne(_connections[i].connectionId, _heartbeat);
+                }
+			}
+
         }
 
         public void Listen(ushort port)
@@ -286,6 +316,8 @@ namespace PurrNet.Transports
 
         private void OnServerReceivedData(int clientId, ArraySegment<byte> data)
         {
+            if (IsHeartbeat(data)) return;
+
             var byteData = new ByteData(data.Array, data.Offset, data.Count);
             var conn = new Connection(clientId);
             onDataReceived?.Invoke(conn, byteData, true);
