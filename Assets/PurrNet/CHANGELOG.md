@@ -1,3 +1,10 @@
+# [1.24.0-beta.5](https://github.com/PurrNet/PurrNet/compare/v1.24.0-beta.4...v1.24.0-beta.5) (2026-09-17)
+
+
+### Features
+
+* introduce a deffer Destroy (despawn) method for big instances ([6db0b88](https://github.com/PurrNet/PurrNet/commit/6db0b8891d8685f42cf59c96b512b43b87a4cef3))
+
 # [1.24.0-beta.4](https://github.com/PurrNet/PurrNet/compare/v1.24.0-beta.3...v1.24.0-beta.4) (2026-09-15)
 
 
