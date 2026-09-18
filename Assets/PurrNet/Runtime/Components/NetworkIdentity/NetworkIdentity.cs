@@ -35,13 +35,13 @@ namespace PurrNet
 
         [SerializeField, HideInInspector] private List<NetworkIdentity> _directChildren;
 
-        private NetworkIdentity[] _siblingIdentities;
+        [NonSerialized] private NetworkIdentity[] _siblingIdentities;
 
         internal NetworkIdentity[] siblingIdentities
         {
             get
             {
-                if (_siblingIdentities != null)
+                if (_siblingIdentities is { Length: > 0 })
                     return _siblingIdentities;
 
                 var siblings = GetComponents<NetworkIdentity>();
@@ -432,7 +432,7 @@ namespace PurrNet
         public PlayerID localPlayerForced => localPlayer ?? default;
 
         private readonly List<PlayerID> _observers = new List<PlayerID>(4);
-        private List<PlayerID> _pendingObservers;
+        [System.NonSerialized] private List<PlayerID> _pendingObservers;
 
         public IReadOnlyList<PlayerID> observers => _observers;
 
