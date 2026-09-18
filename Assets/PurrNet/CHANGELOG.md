@@ -1,3 +1,10 @@
+# [1.24.0-beta.7](https://github.com/PurrNet/PurrNet/compare/v1.24.0-beta.6...v1.24.0-beta.7) (2026-09-18)
+
+
+### Bug Fixes
+
+* Domain reload issue ([5ea6fba](https://github.com/PurrNet/PurrNet/commit/5ea6fbae378a544ad134ea2bdb6ea65a457aa430))
+
 # [1.24.0-beta.6](https://github.com/PurrNet/PurrNet/compare/v1.24.0-beta.5...v1.24.0-beta.6) (2026-09-17)
 
 
