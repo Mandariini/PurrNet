@@ -4552,7 +4552,7 @@ namespace PurrNet.Modules
             identity.TriggerDespawnEvent(_asServer, preserveModules);
         }
 
-        static readonly Unity.Profiling.ProfilerMarker UnregisterCallbacksMarker = new("PurrNet.Despawn.Unregister.Callbacks");
+        static readonly ProfilerMarker UnregisterCallbacksMarker = new("PurrNet.Despawn.Unregister.Callbacks");
         sealed class ReferenceIdentityComparer : IEqualityComparer<NetworkIdentity>
         {
             public static readonly ReferenceIdentityComparer instance = new();
