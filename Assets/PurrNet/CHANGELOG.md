@@ -1,3 +1,10 @@
+# [1.24.0-beta.8](https://github.com/PurrNet/PurrNet/compare/v1.24.0-beta.7...v1.24.0-beta.8) (2026-09-20)
+
+
+### Bug Fixes
+
+* SteamTransport improvements ([94a020f](https://github.com/PurrNet/PurrNet/commit/94a020ff6c0caf90bedfecbcc65359fd6bffe1a5))
+
 # [1.24.0-beta.7](https://github.com/PurrNet/PurrNet/compare/v1.24.0-beta.6...v1.24.0-beta.7) (2026-09-18)
 
 
