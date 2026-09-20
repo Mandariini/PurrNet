@@ -128,7 +128,7 @@ namespace PurrNet.Steam
 
         private PurrConnectionState _listenerState = PurrConnectionState.Disconnected;
 
-        public PurrNet.Transports.ConnectionState listenerState
+        public ConnectionState listenerState
         {
             get => _listenerState;
             private set
@@ -143,7 +143,7 @@ namespace PurrNet.Steam
 
         private PurrConnectionState _clientState = PurrConnectionState.Disconnected;
 
-        public PurrNet.Transports.ConnectionState clientState
+        public ConnectionState clientState
         {
             get => _clientState;
             private set
@@ -354,7 +354,7 @@ namespace PurrNet.Steam
             _client.SendMessages();
             return true;
         }
-        
+
         public ulong GetSteamID(Connection conn)
         {
             return _server?.GetSteamID(conn.connectionId) ?? 0;
