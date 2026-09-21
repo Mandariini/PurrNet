@@ -1,3 +1,10 @@
+# [1.24.0-beta.10](https://github.com/PurrNet/PurrNet/compare/v1.24.0-beta.9...v1.24.0-beta.10) (2026-09-21)
+
+
+### Bug Fixes
+
+* finalize timeouts promptly and preserve disconnect reas ([3360e60](https://github.com/PurrNet/PurrNet/commit/3360e60b56530a12f2b86f35d72edabe770cbf0b))
+
 # [1.24.0-beta.9](https://github.com/PurrNet/PurrNet/compare/v1.24.0-beta.8...v1.24.0-beta.9) (2026-09-21)
 
 
