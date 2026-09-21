@@ -19,6 +19,7 @@ namespace PurrNet
     public static class UnityProxy
     {
         public delegate void AsyncInstantiateCompleted(Object original, Object instance);
+        static readonly Unity.Profiling.ProfilerMarker _asyncInstantiateCompletionMarker = new Unity.Profiling.ProfilerMarker("PurrNet.InstantiateAsync.Completion");
         static readonly Unity.Profiling.ProfilerMarker _destroyCollectIdentitiesMarker = new Unity.Profiling.ProfilerMarker("PurrNet.Destroy.CollectIdentities");
         static readonly Unity.Profiling.ProfilerMarker _destroyDespawnLoopMarker = new Unity.Profiling.ProfilerMarker("PurrNet.Destroy.DespawnLoop");
 
@@ -185,6 +186,7 @@ namespace PurrNet
 
             operation.completed += _ =>
             {
+                using var completionScope = _asyncInstantiateCompletionMarker.Auto();
                 T[] results;
                 try
                 {

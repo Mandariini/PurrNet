@@ -2644,6 +2644,11 @@ namespace PurrNet.Modules
         static readonly ProfilerMarker _visibilityLostMarker = new ProfilerMarker("PurrNet.Hierarchy.VisibilityLost");
         static readonly ProfilerMarker _flushSpawnMarker = new ProfilerMarker("PurrNet.Hierarchy.FlushSpawn");
         static readonly ProfilerMarker _lateObserversMarker = new ProfilerMarker("PurrNet.Hierarchy.LateObservers");
+        static readonly ProfilerMarker _asyncInstantiateCompletedMarker = new ProfilerMarker("PurrNet.Hierarchy.AsyncInstantiateCompleted");
+        static readonly ProfilerMarker _asyncInstantiateSetupPrefabMarker = new ProfilerMarker("PurrNet.Hierarchy.AsyncInstantiate.SetupPrefab");
+        static readonly ProfilerMarker _asyncInstantiateValidateShapeMarker = new ProfilerMarker("PurrNet.Hierarchy.AsyncInstantiate.ValidateShape");
+        static readonly ProfilerMarker _internalSpawnMarker = new ProfilerMarker("PurrNet.Hierarchy.InternalSpawn");
+        static readonly ProfilerMarker _setupIdentitiesMarker = new ProfilerMarker("PurrNet.Hierarchy.SetupIdentities");
         static readonly ProfilerMarker _despawnCollectMarker = new ProfilerMarker("PurrNet.Despawn.Collect");
         static readonly ProfilerMarker _despawnPendingSpawnsMarker = new ProfilerMarker("PurrNet.Despawn.PendingSpawns");
         static readonly ProfilerMarker _despawnClearVisibilityMarker = new ProfilerMarker("PurrNet.Despawn.ClearVisibility");
@@ -3035,6 +3040,7 @@ namespace PurrNet.Modules
 #if PURRNET_UNITY_INSTANTIATE_ASYNC
         private void OnAsyncInstantiateCompleted(UnityEngine.Object original, UnityEngine.Object instance)
         {
+            using var completionScope = _asyncInstantiateCompletedMarker.Auto();
             var obj = GetAsyncGameObject(instance);
             var prefab = GetAsyncGameObject(original);
 
@@ -3057,16 +3063,22 @@ namespace PurrNet.Modules
             var identities = ListPool<NetworkIdentity>.Instantiate();
             try
             {
-                obj.GetComponentsInChildren(true, identities);
-                NetworkManager.SetupPrefabInfo(obj, data.prefabId, false, identities);
+                using (_asyncInstantiateSetupPrefabMarker.Auto())
+                {
+                    obj.GetComponentsInChildren(true, identities);
+                    NetworkManager.SetupPrefabInfo(obj, data.prefabId, false, identities);
+                }
 
                 if (!ShouldAutoSpawn(obj, true))
                     return;
 
-                if (!HasMatchingAsyncNetworkShape(data.prefab, obj, identities, out var mismatch))
+                using (_asyncInstantiateValidateShapeMarker.Auto())
                 {
-                    ReportAsyncShapeMismatch(data.prefab, obj, mismatch);
-                    return;
+                    if (!HasMatchingAsyncNetworkShape(data.prefab, obj, identities, out var mismatch))
+                    {
+                        ReportAsyncShapeMismatch(data.prefab, obj, mismatch);
+                        return;
+                    }
                 }
             }
             finally
@@ -3090,6 +3102,7 @@ namespace PurrNet.Modules
 
         internal void InternalSpawn(GameObject gameObject, bool instantiateRemotelyAsync = false)
         {
+            using var spawnScope = _internalSpawnMarker.Auto();
             if (!isReadyToSpawn)
             {
                 PurrLogger.LogError("Failed to spawn object. Hierarchy module is not ready.\n" +
@@ -3142,7 +3155,8 @@ namespace PurrNet.Modules
             onPreSpawn?.Invoke(gameObject, false);
 
             var baseNid = new NetworkID(_nextId++, scope);
-            SetupIdsLocally(id, ref baseNid);
+            using (_setupIdentitiesMarker.Auto())
+                SetupIdsLocally(id, ref baseNid);
             ApplyParentChange(id, id.parent, id.invertedPathToNearestParentArray, false, applyToTransform: false);
 
             if (!_asServer)
