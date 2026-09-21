@@ -25,6 +25,9 @@ namespace JamesFrowen.SimpleWeb
         // Accepted connections that have not completed the handshake yet
         readonly ConcurrentDictionary<Connection, byte> pendingConnections = new ConcurrentDictionary<Connection, byte>();
 
+        // guards the serverStopped check and Connected publish against Stop()
+        readonly object publishLock = new object();
+
         int _idCounter = 0;
 
         public WebSocketServer(TcpConfig tcpConfig, int maxMessageSize, int handshakeMaxSize, SslConfig sslConfig,
@@ -51,7 +54,10 @@ namespace JamesFrowen.SimpleWeb
 
         public void Stop()
         {
-            serverStopped = true;
+            lock (publishLock)
+            {
+                serverStopped = true;
+            }
 
             // Interrupt then stop so that Exception is handled correctly
             acceptThread?.Interrupt();
@@ -149,18 +155,17 @@ namespace JamesFrowen.SimpleWeb
                     return;
                 }
 
-                conn.connId = Interlocked.Increment(ref _idCounter);
-                connections.TryAdd(conn.connId, conn);
-                pendingConnections.TryRemove(conn, out _);
-
-                receiveQueue.Enqueue(new Message(conn.connId, EventType.Connected));
-
-                // Stop() may have missed this connection, so close it here
-                if (serverStopped)
+                lock (publishLock)
                 {
-                    Log.Info("Server stopped after successful handshake");
-                    return;
+                    if (serverStopped) return;
+                    conn.connId = Interlocked.Increment(ref _idCounter);
+                    connections.TryAdd(conn.connId, conn);
+                    pendingConnections.TryRemove(conn, out _);
+                    receiveQueue.Enqueue(new Message(conn.connId, EventType.Connected));
                 }
+
+                if (serverStopped)
+                    return;
 
                 var sendThread = new Thread(() =>
                 {
