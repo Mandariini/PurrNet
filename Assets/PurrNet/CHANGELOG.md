@@ -1,3 +1,10 @@
+# [1.24.0-beta.11](https://github.com/PurrNet/PurrNet/compare/v1.24.0-beta.10...v1.24.0-beta.11) (2026-09-21)
+
+
+### Performance Improvements
+
+* async destroy ([5e8a30b](https://github.com/PurrNet/PurrNet/commit/5e8a30bc2fa7474a20b5337ea2a87c8e24895fb4))
+
 # [1.24.0-beta.10](https://github.com/PurrNet/PurrNet/compare/v1.24.0-beta.9...v1.24.0-beta.10) (2026-09-21)
 
 
