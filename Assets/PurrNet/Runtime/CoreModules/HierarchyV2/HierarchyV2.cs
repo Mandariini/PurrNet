@@ -4060,27 +4060,6 @@ namespace PurrNet.Modules
             return true;
         }
 
-        /// <summary>
-        /// Sibling-index paths cannot distinguish two same-type siblings that swapped places in
-        /// Awake: positionally the shapes are identical, but network ids would silently cross-map
-        /// between the sender and every receiver. Transform names along the path catch that case
-        /// whenever the siblings are distinguishable at all.
-        /// </summary>
-        private static bool HaveMatchingNamePath(string[] a, string[] b)
-        {
-            int aLength = a?.Length ?? 0;
-            int bLength = b?.Length ?? 0;
-            if (aLength != bLength)
-                return false;
-
-            for (var i = 0; i < aLength; i++)
-            {
-                if (!string.Equals(a![i], b![i], StringComparison.Ordinal))
-                    return false;
-            }
-            return true;
-        }
-
         private readonly struct AsyncNetworkShapeEntry
         {
             public readonly Type type;
@@ -4120,30 +4099,76 @@ namespace PurrNet.Modules
             List<NetworkIdentity> instanceIdentities, out string mismatch)
         {
             var expected = GetPrefabAsyncNetworkShape(prefab);
-            var actual = new List<AsyncNetworkShapeEntry>();
-            CaptureAsyncNetworkShape(instance, instanceIdentities, actual);
-
-            if (expected.Count != actual.Count)
+            int actualCount = 0;
+            if (instance)
             {
-                mismatch = $"expected {expected.Count} NetworkIdentity components, but the result has {actual.Count}";
+                for (var i = 0; i < instanceIdentities.Count; i++)
+                {
+                    if (instanceIdentities[i])
+                        ++actualCount;
+                }
+            }
+
+            if (expected.Count != actualCount)
+            {
+                mismatch = $"expected {expected.Count} NetworkIdentity components, but the result has {actualCount}";
                 return false;
             }
 
-            for (var i = 0; i < expected.Count; i++)
+            if (actualCount == 0)
             {
-                var a = expected[i];
-                var b = actual[i];
-                if (a.type != b.type || a.componentIndex != b.componentIndex ||
-                    !HaveMatchingPath(a.transformPath, b.transformPath) ||
-                    !HaveMatchingNamePath(a.namePath, b.namePath))
+                mismatch = null;
+                return true;
+            }
+
+            var root = instance.transform;
+            Transform runTransform = null;
+            int runStart = 0;
+            int shapeIndex = 0;
+
+            for (var i = 0; i < instanceIdentities.Count; i++)
+            {
+                var identity = instanceIdentities[i];
+                if (!identity)
+                    continue;
+
+                var trs = identity.transform;
+                bool startsRun = !ReferenceEquals(trs, runTransform);
+                if (startsRun)
                 {
-                    mismatch = $"NetworkIdentity component {i} changed type, component order, transform path, or name";
+                    runTransform = trs;
+                    runStart = i;
+                }
+
+                var entry = expected[shapeIndex];
+                if (entry.type != identity.GetType() || entry.componentIndex != i - runStart ||
+                    (startsRun && !HasMatchingAsyncTransformPath(root, trs, entry)))
+                {
+                    mismatch = $"NetworkIdentity component {shapeIndex} changed type, component order, transform path, or name";
                     return false;
                 }
+
+                ++shapeIndex;
             }
 
             mismatch = null;
             return true;
+        }
+
+        private static bool HasMatchingAsyncTransformPath(Transform root, Transform current,
+            AsyncNetworkShapeEntry expected)
+        {
+            for (var i = expected.transformPath.Length - 1; i >= 0; i--)
+            {
+                if (!current || current == root ||
+                    current.GetSiblingIndex() != expected.transformPath[i] ||
+                    !string.Equals(current.name, expected.namePath[i], StringComparison.Ordinal))
+                    return false;
+
+                current = current.parent;
+            }
+
+            return current == root;
         }
 
         private static void CaptureAsyncNetworkShape(GameObject root, List<AsyncNetworkShapeEntry> result)

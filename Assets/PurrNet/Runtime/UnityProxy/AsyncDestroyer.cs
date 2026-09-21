@@ -10,6 +10,10 @@ namespace PurrNet
     internal static class AsyncDestroyer
     {
         const int MAX_PENDING = 64;
+        static readonly Unity.Profiling.ProfilerMarker _queuedMarker = new Unity.Profiling.ProfilerMarker("PurrNet.AsyncDestroy.Queued");
+        static readonly Unity.Profiling.ProfilerMarker _queueFullMarker = new Unity.Profiling.ProfilerMarker("PurrNet.AsyncDestroy.QueueFull");
+        static readonly Unity.Profiling.ProfilerMarker _tickMarker = new Unity.Profiling.ProfilerMarker("PurrNet.AsyncDestroy.Tick");
+        static readonly Unity.Profiling.ProfilerMarker _completedRootMarker = new Unity.Profiling.ProfilerMarker("PurrNet.AsyncDestroy.CompletedRoot");
         static readonly Unity.Profiling.ProfilerMarker _prepareWalkMarker = new Unity.Profiling.ProfilerMarker("PurrNet.AsyncDestroy.Prepare.Walk");
         static readonly Unity.Profiling.ProfilerMarker _prepareDeactivateMarker = new Unity.Profiling.ProfilerMarker("PurrNet.AsyncDestroy.Prepare.Deactivate");
         static readonly Unity.Profiling.ProfilerMarker _prepareUnparentMarker = new Unity.Profiling.ProfilerMarker("PurrNet.AsyncDestroy.Prepare.Unparent");
@@ -59,19 +63,27 @@ namespace PurrNet
                     return;
             }
 
-            if (!Application.isPlaying || ApplicationContext.isQuitting || _pending.Count >= MAX_PENDING ||
+            if (_pending.Count >= MAX_PENDING)
+            {
+                using (_queueFullMarker.Auto())
+                    UnityProxy.DestroyDirectly(go);
+                return;
+            }
+
+            if (!Application.isPlaying || ApplicationContext.isQuitting ||
                 !TryPrepare(go))
             {
                 UnityProxy.DestroyDirectly(go);
                 return;
             }
 
-            _pending.Add(new Entry
-            {
-                gameObject = go,
-                msPerFrame = msPerFrame,
-                frame = Time.frameCount
-            });
+            using (_queuedMarker.Auto())
+                _pending.Add(new Entry
+                {
+                    gameObject = go,
+                    msPerFrame = msPerFrame,
+                    frame = Time.frameCount
+                });
 
             if (_subscribed)
                 return;
@@ -128,6 +140,7 @@ namespace PurrNet
 
         static void Tick()
         {
+            using var tickScope = _tickMarker.Auto();
             if (ApplicationContext.isQuitting)
             {
                 _pending.Clear();
@@ -156,7 +169,11 @@ namespace PurrNet
                 if (!DestroySlice(entry.gameObject, start, budget))
                     break;
 
-                _pending.RemoveAt(0);
+                using (_completedRootMarker.Auto())
+                    _pending.RemoveAt(0);
+
+                if (Stopwatch.GetTimestamp() - start >= budget)
+                    break;
             }
 
             if (_pending.Count == 0)
