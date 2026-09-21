@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Net.Sockets;
 using System.Security.Authentication;
 using JamesFrowen.SimpleWeb;
 using PurrNet.Edgegap.Runtime;
@@ -116,6 +117,8 @@ namespace PurrNet.Transports
         private float _lastHeartbeatSent;
         private float _lastClientReceive;
         private bool _clientTimedOut;
+        private bool _clientDisconnectRequested;
+        private readonly HashSet<int> _timedOutConnections = new HashSet<int>();
 
         public bool shouldClientSendKeepAlive => true;
 
@@ -145,13 +148,30 @@ namespace PurrNet.Transports
 
             var timeoutMs = Mathf.RoundToInt(_timeoutInSeconds * 1000);
             _tcpConfig = new TcpConfig(noDelay: true, sendTimeout: timeoutMs, receiveTimeout: timeoutMs);
-            _client = SimpleWebClient.Create(ushort.MaxValue, 5000, _tcpConfig);
+            SetupCloud();
+        }
 
+        private void ConstructClient()
+        {
+            _client = SimpleWebClient.Create(ushort.MaxValue, 5000, _tcpConfig);
             _client.onConnect += OnClientConnected;
             _client.onDisconnect += OnClientDisconnected;
             _client.onData += OnClientReceivedData;
             _client.onError += OnClientError;
-            SetupCloud();
+            _clientTimedOut = false;
+            _clientDisconnectRequested = false;
+        }
+
+        private void CleanupClient()
+        {
+            if (_client == null)
+                return;
+
+            _client.onConnect -= OnClientConnected;
+            _client.onDisconnect -= OnClientDisconnected;
+            _client.onData -= OnClientReceivedData;
+            _client.onError -= OnClientError;
+            _client = null;
         }
 
         private void SetupCloud()
@@ -206,6 +226,7 @@ namespace PurrNet.Transports
         private void CleanupServer()
         {
             _connections.Clear();
+            _timedOutConnections.Clear();
 
             if (_server != null)
             {
@@ -232,9 +253,16 @@ namespace PurrNet.Transports
 
         private void OnClientDisconnected()
         {
+            if (clientState == ConnectionState.Disconnected)
+                return;
+
             var wasConnected = clientState == ConnectionState.Connected;
             var reason = _clientTimedOut ? DisconnectReason.Timeout : DisconnectReason.ClientRequest;
             _clientTimedOut = false;
+
+            // A browser close callback can arrive long after a timeout. Detach this
+            // client so it cannot disconnect a subsequent connection or deliver stale data.
+            CleanupClient();
 
             clientState = ConnectionState.Disconnecting;
             TriggerConnectionStateEvent(false);
@@ -246,9 +274,30 @@ namespace PurrNet.Transports
             TriggerConnectionStateEvent(false);
         }
 
-        private static void OnClientError(Exception exception)
+        private void OnClientError(Exception exception)
         {
+            if (IsTimeout(exception))
+            {
+                if (!_clientDisconnectRequested)
+                    _clientTimedOut = true;
+                return;
+            }
+
             Debug.LogException(exception);
+        }
+
+        private static bool IsTimeout(Exception exception)
+        {
+            // NetworkStream wraps socket receive timeouts in IOException. Blocking
+            // sockets can report WouldBlock for a receive timeout on Unix.
+            for (var error = exception; error != null; error = error.InnerException)
+            {
+                if (error is SocketException socketError &&
+                    socketError.SocketErrorCode is SocketError.TimedOut or SocketError.WouldBlock)
+                    return true;
+            }
+
+            return false;
         }
 
         private void OnClientConnected()
@@ -286,7 +335,7 @@ namespace PurrNet.Transports
             if (now - _lastHeartbeatSent < _timeoutInSeconds / 3f) return;
             _lastHeartbeatSent = now;
 
-            if (clientState == ConnectionState.Connected)
+            if (clientState == ConnectionState.Connected && !_clientDisconnectRequested)
             {
                 _client.Send(_heartbeat);
             }
@@ -304,15 +353,17 @@ namespace PurrNet.Transports
         // so the receive timeout is enforced manually on all platforms
         private void CheckClientTimeout()
         {
-            if (_timeoutInSeconds <= 0f || _clientTimedOut || clientState != ConnectionState.Connected)
+            if (_timeoutInSeconds <= 0f || _clientDisconnectRequested || clientState != ConnectionState.Connected)
                 return;
 
             if (Time.realtimeSinceStartup - _lastClientReceive <= _timeoutInSeconds)
                 return;
 
-            // dont call _client.Disconnect() every frame. Wait until the disconnect callback arrives
+            // WebSocket.close() starts a handshake; an unreachable peer may not
+            // finish it promptly. Complete the transport disconnect now.
             _clientTimedOut = true;
-            Disconnect();
+            _client.Disconnect();
+            OnClientDisconnected();
         }
 
         public void Listen(ushort port)
@@ -335,8 +386,14 @@ namespace PurrNet.Transports
             Listen(_serverPort);
         }
 
-        private static void OnServerError(int clientId, Exception exception)
+        private void OnServerError(int clientId, Exception exception)
         {
+            if (IsTimeout(exception))
+            {
+                _timedOutConnections.Add(clientId);
+                return;
+            }
+
             Debug.LogException(exception);
         }
 
@@ -362,7 +419,8 @@ namespace PurrNet.Transports
                 }
             }
 
-            onDisconnected?.Invoke(conn, DisconnectReason.ClientRequest, true);
+            var reason = _timedOutConnections.Remove(clientId) ? DisconnectReason.Timeout : DisconnectReason.ClientRequest;
+            onDisconnected?.Invoke(conn, reason, true);
         }
 
         private void OnClientConnectedToServer(int clientId)
@@ -397,7 +455,7 @@ namespace PurrNet.Transports
 
         public void Connect(string ip, ushort port)
         {
-            if (clientState is ConnectionState.Connecting or ConnectionState.Connected)
+            if (clientState != ConnectionState.Disconnected)
                 return;
 
             var builder = new UriBuilder
@@ -409,6 +467,7 @@ namespace PurrNet.Transports
                 Path = _path
             };
 
+            ConstructClient();
             clientState = ConnectionState.Connecting;
             TriggerConnectionStateEvent(false);
 
@@ -434,16 +493,16 @@ namespace PurrNet.Transports
             {
                 if (_prevServerState != listenerState)
                 {
-                    onConnectionState?.Invoke(listenerState, true);
                     _prevServerState = listenerState;
+                    onConnectionState?.Invoke(listenerState, true);
                 }
             }
             else
             {
                 if (_prevClientState != clientState)
                 {
-                    onConnectionState?.Invoke(clientState, false);
                     _prevClientState = clientState;
+                    onConnectionState?.Invoke(clientState, false);
                 }
             }
         }
@@ -458,6 +517,8 @@ namespace PurrNet.Transports
             if (clientState is ConnectionState.Disconnecting or ConnectionState.Disconnected)
                 return;
 
+            _clientDisconnectRequested = true;
+            _clientTimedOut = false;
             _client.Disconnect();
             TriggerConnectionStateEvent(false);
         }
@@ -482,7 +543,7 @@ namespace PurrNet.Transports
 
         public void SendToServer(ByteData data, Channel method = Channel.ReliableOrdered)
         {
-            if (clientState != ConnectionState.Connected)
+            if (clientState != ConnectionState.Connected || _clientDisconnectRequested)
                 return;
 
             _client.Send(new ArraySegment<byte>(data.data, data.offset, data.length));
