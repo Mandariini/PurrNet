@@ -112,7 +112,7 @@ namespace PurrNet.Transports
         private static readonly ArraySegment<byte> _heartbeat = new ArraySegment<byte>(new byte[] { HEART_BEAT_MARKER });
         private static bool IsHeartbeat(ArraySegment<byte> data) => data.Count == 1 && data.Array[data.Offset] == HEART_BEAT_MARKER;
 
-        private float _heartbeatTimer;
+        private float _lastHeartbeatSent;
 
         public bool shouldClientSendKeepAlive => true;
 
@@ -265,16 +265,16 @@ namespace PurrNet.Transports
         {
             _server?.ProcessMessageQueue();
             _client?.ProcessMessageQueue();
-            SendHeartbeatsIfDue(delta);
+            SendHeartbeatsIfDue();
         }
 
-        private void SendHeartbeatsIfDue(float delta)
+        private void SendHeartbeatsIfDue()
         {
             if (_timeoutInSeconds <= 0f) return;
 
-            _heartbeatTimer += delta;
-            if (_heartbeatTimer < _timeoutInSeconds / 3f) return;
-            _heartbeatTimer = 0f;
+            float now = Time.realtimeSinceStartup;
+            if (now - _lastHeartbeatSent < _timeoutInSeconds / 3f) return;
+            _lastHeartbeatSent = now;
 
             if (clientState == ConnectionState.Connected)
             {
@@ -287,7 +287,7 @@ namespace PurrNet.Transports
                 {
                     _server.SendOne(_connections[i].connectionId, _heartbeat);
                 }
-			}
+            }
 
         }
 
