@@ -1,3 +1,16 @@
+# [1.24.0-beta.9](https://github.com/PurrNet/PurrNet/compare/v1.24.0-beta.8...v1.24.0-beta.9) (2026-09-21)
+
+
+### Bug Fixes
+
+* Enforce receive timeout on WebGL clients ([5c683e3](https://github.com/PurrNet/PurrNet/commit/5c683e390b965176be62f4188b4c79be6babf406))
+* implement missing timeout setting in WebTransport ([0bcc193](https://github.com/PurrNet/PurrNet/commit/0bcc19341a482be1fd4e256b94efa4e1a8b12014))
+
+
+### Features
+
+* heartbeat support for web transport ([5c87442](https://github.com/PurrNet/PurrNet/commit/5c87442e70ff788373f8115152c8682dc0dcb1d8))
+
 # [1.24.0-beta.8](https://github.com/PurrNet/PurrNet/compare/v1.24.0-beta.7...v1.24.0-beta.8) (2026-09-20)
 
 
