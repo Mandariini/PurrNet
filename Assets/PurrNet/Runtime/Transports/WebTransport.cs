@@ -28,12 +28,9 @@ namespace PurrNet.Transports
         [Tooltip("The path to add to the address.\nEx: '/game' results in ws://localhost:5001/game")] [SerializeField]
         private string _path = "";
 
-        // TODO: Implement timeout
-        /*[Header("Shared Settings")]
-        [Tooltip("The amount of time in seconds before socket is disconnected due to no data being received.")]
-        [SerializeField] private float _timeoutInSeconds = 5f;*/
-
         [Header("Shared Settings")]
+        [Tooltip("The amount of time in seconds before socket is disconnected due to no data being received.")]
+        [SerializeField] private float _timeoutInSeconds = 5f;
 
         [Header("SSL Settings")] [SerializeField]
         private bool _enableSSL;
@@ -111,6 +108,15 @@ namespace PurrNet.Transports
         private SimpleWebServer _server;
         private SimpleWebClient _client;
 
+        // SimpleWebTransport has no ping/pong frames, so send a 1 byte marker every timeout/3 seconds and filter it out on receive
+        private const byte HEART_BEAT_MARKER = 0xFF;
+        private static readonly ArraySegment<byte> _heartbeat = new ArraySegment<byte>(new byte[] { HEART_BEAT_MARKER });
+        private static bool IsHeartbeat(ArraySegment<byte> data) => data.Count == 1 && data.Array[data.Offset] == HEART_BEAT_MARKER;
+
+        private float _lastHeartbeatSent;
+        private float _lastClientReceive;
+        private bool _clientTimedOut;
+
         public bool shouldClientSendKeepAlive => true;
 
         private readonly List<Connection> _connections = new List<Connection>();
@@ -119,7 +125,7 @@ namespace PurrNet.Transports
 
         public override bool isSupported => true;
 
-        readonly TcpConfig _tcpConfig = new(noDelay: true, sendTimeout: 0, receiveTimeout: 0);
+        TcpConfig _tcpConfig;
 
         public bool SupportsChannel(Channel channel)
         {
@@ -136,7 +142,11 @@ namespace PurrNet.Transports
         private void Awake()
         {
             CleanupServer();
+
+            var timeoutMs = Mathf.RoundToInt(_timeoutInSeconds * 1000);
+            _tcpConfig = new TcpConfig(noDelay: true, sendTimeout: timeoutMs, receiveTimeout: timeoutMs);
             _client = SimpleWebClient.Create(ushort.MaxValue, 5000, _tcpConfig);
+
             _client.onConnect += OnClientConnected;
             _client.onDisconnect += OnClientDisconnected;
             _client.onData += OnClientReceivedData;
@@ -213,6 +223,9 @@ namespace PurrNet.Transports
 
         private void OnClientReceivedData(ArraySegment<byte> data)
         {
+            _lastClientReceive = Time.realtimeSinceStartup;
+            if (IsHeartbeat(data)) return;
+
             var byteData = new ByteData(data.Array, data.Offset, data.Count);
             onDataReceived?.Invoke(new Connection(0), byteData, false);
         }
@@ -220,12 +233,14 @@ namespace PurrNet.Transports
         private void OnClientDisconnected()
         {
             var wasConnected = clientState == ConnectionState.Connected;
+            var reason = _clientTimedOut ? DisconnectReason.Timeout : DisconnectReason.ClientRequest;
+            _clientTimedOut = false;
 
             clientState = ConnectionState.Disconnecting;
             TriggerConnectionStateEvent(false);
 
             if (wasConnected)
-                onDisconnected?.Invoke(new Connection(0), DisconnectReason.ClientRequest, false);
+                onDisconnected?.Invoke(new Connection(0), reason, false);
 
             clientState = ConnectionState.Disconnected;
             TriggerConnectionStateEvent(false);
@@ -238,6 +253,9 @@ namespace PurrNet.Transports
 
         private void OnClientConnected()
         {
+            _lastClientReceive = Time.realtimeSinceStartup;
+            _clientTimedOut = false;
+
             clientState = ConnectionState.Connected;
             TriggerConnectionStateEvent(false);
 
@@ -256,6 +274,45 @@ namespace PurrNet.Transports
         {
             _server?.ProcessMessageQueue();
             _client?.ProcessMessageQueue();
+            CheckClientTimeout();
+            SendHeartbeatsIfDue();
+        }
+
+        private void SendHeartbeatsIfDue()
+        {
+            if (_timeoutInSeconds <= 0f) return;
+
+            float now = Time.realtimeSinceStartup;
+            if (now - _lastHeartbeatSent < _timeoutInSeconds / 3f) return;
+            _lastHeartbeatSent = now;
+
+            if (clientState == ConnectionState.Connected)
+            {
+                _client.Send(_heartbeat);
+            }
+
+            if (listenerState == ConnectionState.Connected)
+            {
+                for (int i = 0; i < _connections.Count; i++)
+                {
+                    _server.SendOne(_connections[i].connectionId, _heartbeat);
+                }
+            }
+        }
+
+        // WebGL clients use the browser WebSocket and never get the TcpConfig timeouts,
+        // so the receive timeout is enforced manually on all platforms
+        private void CheckClientTimeout()
+        {
+            if (_timeoutInSeconds <= 0f || _clientTimedOut || clientState != ConnectionState.Connected)
+                return;
+
+            if (Time.realtimeSinceStartup - _lastClientReceive <= _timeoutInSeconds)
+                return;
+
+            // dont call _client.Disconnect() every frame. Wait until the disconnect callback arrives
+            _clientTimedOut = true;
+            Disconnect();
         }
 
         public void Listen(ushort port)
@@ -285,6 +342,8 @@ namespace PurrNet.Transports
 
         private void OnServerReceivedData(int clientId, ArraySegment<byte> data)
         {
+            if (IsHeartbeat(data)) return;
+
             var byteData = new ByteData(data.Array, data.Offset, data.Count);
             var conn = new Connection(clientId);
             onDataReceived?.Invoke(conn, byteData, true);
