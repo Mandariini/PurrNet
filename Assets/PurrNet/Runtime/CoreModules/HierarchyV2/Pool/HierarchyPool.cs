@@ -34,6 +34,8 @@ namespace PurrNet.Modules
 
     public class HierarchyPool
     {
+        private static readonly Unity.Profiling.ProfilerMarker BuildMarker = new("PurrNet.Pool.BuildPrototype");
+        private static readonly Unity.Profiling.ProfilerMarker WarmupMarker = new("PurrNet.Pool.Warmup");
         private readonly Dictionary<PrefabPieceID, Queue<GameObject>> _pool = new();
         private readonly HashSet<GameObject> _pooledObjects = new();
         private readonly Dictionary<PrefabPieceID, Queue<GameObject>> _activeScenePieces = new();
@@ -150,6 +152,7 @@ namespace PurrNet.Modules
 
         private void Warmup(PrefabData prefabData)
         {
+            using var sample = WarmupMarker.Auto();
             var copy = UnityProxy.InstantiateDirectly(prefabData.prefab, _parent);
             NetworkManager.SetupPrefabInfo(copy, prefabData.prefabId, prefabData.pooled || _forceWarmupPieces);
 
@@ -966,6 +969,7 @@ namespace PurrNet.Modules
         public static bool TryBuildPrototype(PoolPair pair, GameObjectPrototype prototype,
             List<NetworkIdentity> createdNids, out GameObject result, out bool shouldBeActive)
         {
+            using var sample = BuildMarker.Auto();
             try
             {
                 if (prototype.framework.Count == 0)
