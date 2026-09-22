@@ -1,3 +1,10 @@
+# [1.24.0-beta.12](https://github.com/PurrNet/PurrNet/compare/v1.24.0-beta.11...v1.24.0-beta.12) (2026-09-22)
+
+
+### Bug Fixes
+
+* strip all compiler errors and some more profiler markers ([f30c0df](https://github.com/PurrNet/PurrNet/commit/f30c0df9156d0bdcb2fcfa28d711b543c6e8ed40))
+
 # [1.24.0-beta.11](https://github.com/PurrNet/PurrNet/compare/v1.24.0-beta.10...v1.24.0-beta.11) (2026-09-21)
 
 
