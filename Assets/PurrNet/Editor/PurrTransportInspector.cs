@@ -77,16 +77,15 @@ namespace PurrNet.Editor
             }
         }
 
-        int RegionId(string region, string host)
+        // Match by region only. Returning -1 on a host mismatch made the popup fall
+        // back to index 0 and write it back — "Find Best Region" could pick France
+        // and the next repaint would silently turn it into Brazil (2026-09-23).
+        int RegionId(string region)
         {
             for (var i = 0; i < _regions.Length; i++)
             {
                 if (_regions[i] == region)
-                {
-                    if (_hosts[i] != host)
-                        return -1;
                     return i;
-                }
             }
 
             return -1;
@@ -104,6 +103,7 @@ namespace PurrNet.Editor
                 var server = await PurrTransportUtils.ActualGetRelayServerAsync(_masterServer.stringValue);
 
                 _region.stringValue = server.region;
+                _host.stringValue = server.host;
                 serializedObject.ApplyModifiedProperties();
 
                 _lookingForBestRegion = false;
@@ -135,14 +135,6 @@ namespace PurrNet.Editor
                 _lastMasterServerUpdate = 0;
             }
 
-            var server = _masterServer.stringValue;
-            if (Uri.TryCreate(server, UriKind.Absolute, out var url) && url.Host.EndsWith("purrtransport.purrservers.com"))
-            {
-                EditorGUILayout.HelpBox("This server is meant for development use only.\n" +
-                                        "Usage in production is strictly prohibited.\n" +
-                                        "You need to host your own relay servers for production.", MessageType.Warning);
-            }
-
             EditorGUILayout.PropertyField(_roomName);
 
             bool oldEnabled = GUI.enabled;
@@ -160,13 +152,17 @@ namespace PurrNet.Editor
             }
             else
             {
-                int region = RegionId(transport.region, transport.host);
+                int region = RegionId(transport.region);
                 var newRegion = EditorGUILayout.Popup("Region", region, _regions);
 
-                if (newRegion < 0 && _regions.Length > 0)
-                    newRegion = 0;
+                // A known region whose stored host drifted (older serialization, or a
+                // relay that moved) gets its host refreshed without changing region.
+                if (region >= 0 && newRegion == region && _host.stringValue != _hosts[region])
+                    _host.stringValue = _hosts[region];
 
-                if (region != newRegion && newRegion >= 0 && newRegion < _regions.Length)
+                // Only an explicit pick changes the region; an unknown current value
+                // shows as an empty popup instead of being replaced by the first entry.
+                if (newRegion != region && newRegion >= 0 && newRegion < _regions.Length)
                 {
                     _region.stringValue = _regions[newRegion];
                     _host.stringValue = _hosts[newRegion];
@@ -186,6 +182,12 @@ namespace PurrNet.Editor
             GUILayout.Label(_host.stringValue);
             GUI.color = Color.white;
             EditorGUILayout.EndHorizontal();
+
+            // Which PurrNet project this relay traffic belongs to. Only meaningful on
+            // PurrNet's own fleet; a self-hosted balancer has no project concept.
+            var server = _masterServer.stringValue;
+            if (Uri.TryCreate(server, UriKind.Absolute, out var url) && url.Host.EndsWith("purrservers.com"))
+                PurrTransportProjectSetup.Draw();
 
             EditorGUILayout.PropertyField(_timeoutInSeconds);
             EditorGUILayout.PropertyField(_attemptDirectConnection, new GUIContent("Connect Players Directly (P2P)",
