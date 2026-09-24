@@ -1,3 +1,10 @@
+# [1.24.0-beta.14](https://github.com/PurrNet/PurrNet/compare/v1.24.0-beta.13...v1.24.0-beta.14) (2026-09-24)
+
+
+### Bug Fixes
+
+* DontDestroyOnLoad scene invalid on second play session with domain ([21e4058](https://github.com/PurrNet/PurrNet/commit/21e405814ea927adcb3c509c2e7b6c518055980f))
+
 # [1.24.0-beta.13](https://github.com/PurrNet/PurrNet/compare/v1.24.0-beta.12...v1.24.0-beta.13) (2026-09-24)
 
 
