@@ -1,6 +1,18 @@
 # [1.24.0-beta.13](https://github.com/PurrNet/PurrNet/compare/v1.24.0-beta.12...v1.24.0-beta.13) (2026-09-24)
 
 
+### Bug Fixes
+
+* Network Rigidbody buffer buildup ([74f322b](https://github.com/PurrNet/PurrNet/commit/74f322baa396fd17f696342d6b4b65aa0eb5aac1))
+
+
+### Features
+
+* PurrTransport project relay for production ([73c8466](https://github.com/PurrNet/PurrNet/commit/73c8466c4df3ca255b2571ae101f4eccf015c78a))
+
+# [1.24.0-beta.13](https://github.com/PurrNet/PurrNet/compare/v1.24.0-beta.12...v1.24.0-beta.13) (2026-09-24)
+
+
 ### Features
 
 * PurrTransport project relay for production ([73c8466](https://github.com/PurrNet/PurrNet/commit/73c8466c4df3ca255b2571ae101f4eccf015c78a))
