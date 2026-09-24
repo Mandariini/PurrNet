@@ -9,6 +9,10 @@ namespace PurrNet.Editor
     public class PurrTransportInspector : UnityEditor.Editor
     {
         private static readonly GUIContent _hostRelayLabel = new("Host relay", "This host's connection to the relay.");
+        private static readonly GUIContent _relayBudgetLabel = new("Relay budget",
+            "Players connected and traffic relayed this month across all of the linked project's rooms, " +
+            "against what the project's plan allows — as the balancer last reported it. " +
+            "Past a limit, new rooms and joins are refused.");
 
         private SerializedProperty _masterServer;
         private SerializedProperty _roomName;
@@ -237,10 +241,21 @@ namespace PurrNet.Editor
 
             int total = transport.connections.Count;
 
-            if (clientLine == null && hostLine == null && total == 0)
+            var usage = transport.relayUsage;
+            if (clientLine == null && hostLine == null && total == 0 && usage == null)
                 return;
 
             EditorGUILayout.Space(4);
+
+            if (usage != null && usage.isValid)
+            {
+                var overPlayers = usage.players.allowed > 0 && usage.players.used >= usage.players.allowed;
+                var overTraffic = usage.traffic.allowedBytes > 0 && usage.traffic.usedBytes >= usage.traffic.allowedBytes;
+                var previous = GUI.color;
+                if (overPlayers || overTraffic) GUI.color = new Color(1f, 0.6f, 0.4f);
+                EditorGUILayout.LabelField(_relayBudgetLabel, new GUIContent(usage.ToString()), EditorStyles.wordWrappedLabel);
+                GUI.color = previous;
+            }
 
             if (clientLine != null)
                 EditorGUILayout.LabelField("Client session", clientLine, EditorStyles.wordWrappedLabel);

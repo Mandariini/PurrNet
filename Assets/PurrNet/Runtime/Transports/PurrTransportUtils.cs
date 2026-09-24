@@ -40,12 +40,50 @@ namespace PurrNet.Transports
 
     [UsedImplicitly]
     [Serializable]
+    public class RelayUsage
+    {
+        [Serializable] public class Players { public int used; public int allowed; }
+        [Serializable] public class Traffic { public long usedBytes; public long allowedBytes; public string month; }
+
+        public Players players;
+        public Traffic traffic;
+
+        public bool isValid => players != null && traffic != null && !string.IsNullOrEmpty(traffic.month);
+
+        public override string ToString()
+        {
+            if (!isValid) return "no budget";
+            var playersText = players.allowed > 0 ? $"{players.used}/{players.allowed} players" : $"{players.used} players";
+            var trafficText = traffic.allowedBytes > 0
+                ? $"{Gigabytes(traffic.usedBytes)} / {Gigabytes(traffic.allowedBytes)} GB ({traffic.month})"
+                : $"{Gigabytes(traffic.usedBytes)} GB ({traffic.month})";
+            return $"{playersText} · {trafficText}";
+        }
+
+        static string Gigabytes(long bytes) => (bytes / 1073741824.0).ToString(bytes < 10L * 1073741824L ? "0.00" : "0.0");
+    }
+
+    public sealed class RelayRefusedException : Exception
+    {
+        public readonly string code;
+        public readonly RelayUsage usage;
+
+        public RelayRefusedException(string code, string message, RelayUsage usage) : base(message)
+        {
+            this.code = code;
+            this.usage = usage;
+        }
+    }
+
+    [UsedImplicitly]
+    [Serializable]
     public struct HostJoinInfo
     {
         public bool ssl;
         public string secret;
         public int port;
         public string roomName;
+        public RelayUsage usage;
         /// <summary>Optional WebRTC signaling endpoint. Older relays leave this empty.</summary>
         public string webRtcUrl;
         [Obsolete]
@@ -63,6 +101,7 @@ namespace PurrNet.Transports
         public int port;
         /// <summary>See <see cref="HostJoinInfo.roomName"/>.</summary>
         public string roomName;
+        public RelayUsage usage;
         /// <summary>Optional WebRTC signaling endpoint. Older relays leave this empty.</summary>
         public string webRtcUrl;
         [Obsolete]
@@ -100,6 +139,10 @@ namespace PurrNet.Transports
                 {
                     return await action();
                 }
+                catch (RelayRefusedException)
+                {
+                    throw;
+                }
                 catch (Exception e)
                 {
                     lastException = e;
@@ -109,6 +152,36 @@ namespace PurrNet.Transports
             if (lastException == null)
                 throw new Exception("Failed to retry.");
             throw lastException;
+        }
+
+        [Serializable]
+        private class BalancerErrorBody
+        {
+            public string error;
+            public string code;
+            public RelayUsage usage;
+        }
+
+        private static Exception BalancerFailure(string what, string text)
+        {
+            if (!string.IsNullOrEmpty(text) && text.TrimStart().StartsWith("{"))
+            {
+                try
+                {
+                    var body = JsonUtility.FromJson<BalancerErrorBody>(text);
+                    if (body != null && !string.IsNullOrEmpty(body.error))
+                    {
+                        if (body.code == "players_exceeded" || body.code == "traffic_exceeded")
+                            return new RelayRefusedException(body.code, $"{what}: {body.error}", body.usage);
+                        return new Exception($"{what}: {body.error}");
+                    }
+                }
+                catch
+                {
+                    // ignore
+                }
+            }
+            return new Exception($"{what}: {text}");
         }
 
         internal static async Task<ClientJoinInfo> Join(string server, string roomName, CancellationTokenSource cts, string projectKey = null)
@@ -152,7 +225,7 @@ namespace PurrNet.Transports
             var response = await request.SendWebRequest();
 
             if (response.webRequest.result != UnityWebRequest.Result.Success)
-                throw new Exception($"Failed to allocate room: {response.webRequest.downloadHandler.text}");
+                throw BalancerFailure("Failed to join room", response.webRequest.downloadHandler.text);
 
             var text = response.webRequest.downloadHandler.text;
             var res = JsonUtility.FromJson<ClientJoinInfo>(text);
@@ -183,7 +256,7 @@ namespace PurrNet.Transports
             var response = await request.SendWebRequest();
 
             if (response.webRequest.result != UnityWebRequest.Result.Success)
-                throw new Exception($"Failed to allocate room: {response.webRequest.downloadHandler.text}");
+                throw BalancerFailure("Failed to allocate room", response.webRequest.downloadHandler.text);
 
             var text = response.webRequest.downloadHandler.text;
             var res = JsonUtility.FromJson<HostJoinInfo>(text);

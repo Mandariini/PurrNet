@@ -112,6 +112,26 @@ namespace PurrNet.Transports
         /// <summary>The relay-side name of the current room (namespaced when a project key is set).</summary>
         public string relayRoomName => string.IsNullOrEmpty(_relayRoomName) ? _roomName : _relayRoomName;
 
+        /// <summary>
+        /// The project's relay budget (players and traffic, used and allowed) as the
+        /// balancer last reported it when this transport opened or joined a room.
+        /// Null on the anonymous relay and before the first answer. Also set when
+        /// the balancer refuses a room for being over a cap.
+        /// </summary>
+        public RelayUsage relayUsage { get; private set; }
+
+        private void NoteRelayUsage(RelayUsage usage)
+        {
+            if (usage == null || !usage.isValid) return;
+            relayUsage = usage;
+            var players = usage.players;
+            var traffic = usage.traffic;
+            if (traffic.allowedBytes > 0 && traffic.usedBytes >= traffic.allowedBytes * 0.8)
+                PurrLogger.LogError($"[PurrTransport] Relay traffic for {traffic.month} is at {usage}. Past the allowance, rooms and joins are refused until next month.");
+            else if (players.allowed > 0 && players.used >= players.allowed * 0.8)
+                PurrLogger.LogWarning($"[PurrTransport] Relay players near the project's limit: {usage}.");
+        }
+
         private static string RelayNameOf(string returned, string requested) =>
             string.IsNullOrEmpty(returned) ? requested : returned;
 
@@ -1163,6 +1183,7 @@ namespace PurrNet.Transports
                         SetServer(_preparedHostMigrationServer);
                         _hostJoinInfo = _preparedHostMigrationJoinInfo;
                         _relayRoomName = RelayNameOf(_hostJoinInfo.roomName, _roomName);
+                        NoteRelayUsage(_hostJoinInfo.usage);
                     }
                     else
                     {
@@ -1178,6 +1199,7 @@ namespace PurrNet.Transports
 
                         _hostJoinInfo = await PurrTransportUtils.Alloc(_masterServer, _region, _roomName, token, projectKey);
                         _relayRoomName = RelayNameOf(_hostJoinInfo.roomName, _roomName);
+                        NoteRelayUsage(_hostJoinInfo.usage);
                     }
 
                     if (token.IsCancellationRequested)
@@ -1212,6 +1234,12 @@ namespace PurrNet.Transports
                 }
                 catch (OperationCanceledException)
                 {
+                }
+                catch (RelayRefusedException e)
+                {
+                    StopListening();
+                    if (e.usage != null && e.usage.isValid) relayUsage = e.usage;
+                    PurrLogger.LogError(e.Message);
                 }
                 catch (Exception e)
                 {
@@ -1323,6 +1351,7 @@ namespace PurrNet.Transports
 
                 _clientJoinInfo = await PurrTransportUtils.Join(_masterServer, _roomName, token, projectKey);
                 _relayRoomName = RelayNameOf(_clientJoinInfo.roomName, _roomName);
+                NoteRelayUsage(_clientJoinInfo.usage);
 
                 if (token.IsCancellationRequested)
                     return;
