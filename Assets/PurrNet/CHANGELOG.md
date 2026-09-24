@@ -1,3 +1,10 @@
+# [1.24.0-beta.13](https://github.com/PurrNet/PurrNet/compare/v1.24.0-beta.12...v1.24.0-beta.13) (2026-09-23)
+
+
+### Features
+
+* PurrTransport project relay for production ([73c8466](https://github.com/PurrNet/PurrNet/commit/73c8466c4df3ca255b2571ae101f4eccf015c78a))
+
 # [1.24.0-beta.12](https://github.com/PurrNet/PurrNet/compare/v1.24.0-beta.11...v1.24.0-beta.12) (2026-09-22)
 
 
