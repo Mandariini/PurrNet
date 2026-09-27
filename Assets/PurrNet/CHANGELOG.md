@@ -1,3 +1,10 @@
+# [1.24.0-beta.17](https://github.com/PurrNet/PurrNet/compare/v1.24.0-beta.16...v1.24.0-beta.17) (2026-09-27)
+
+
+### Bug Fixes
+
+* LiteNetLib reliable messages robustness ([d5d5c12](https://github.com/PurrNet/PurrNet/commit/d5d5c12aa1f654c99fc1e3ef4f8e1b74eb0617ef))
+
 # [1.24.0-beta.16](https://github.com/PurrNet/PurrNet/compare/v1.24.0-beta.15...v1.24.0-beta.16) (2026-09-26)
 
 
