@@ -642,6 +642,7 @@ namespace PurrNet.Transports
                 AutoRecycle = true,
                 EnableStatistics = false,
                 IPv6Enabled = false,
+                ReliableRepairs = true,
                 DisconnectTimeout = Mathf.RoundToInt(_timeoutInSeconds * 1000)
             };
 
@@ -652,6 +653,7 @@ namespace PurrNet.Transports
                 AutoRecycle = true,
                 EnableStatistics = false,
                 IPv6Enabled = false,
+                ReliableRepairs = true,
                 DisconnectTimeout = Mathf.RoundToInt(_timeoutInSeconds * 1000)
             };
 
