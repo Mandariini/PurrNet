@@ -1,3 +1,10 @@
+# [1.24.0-beta.19](https://github.com/PurrNet/PurrNet/compare/v1.24.0-beta.18...v1.24.0-beta.19) (2026-09-28)
+
+
+### Performance Improvements
+
+* NetworkTransform idle cost is measured around 10x lower ([563ba91](https://github.com/PurrNet/PurrNet/commit/563ba912390dd4912208dbdd551d35499fc2c8a0))
+
 # [1.24.0-beta.18](https://github.com/PurrNet/PurrNet/compare/v1.24.0-beta.17...v1.24.0-beta.18) (2026-09-28)
 
 
