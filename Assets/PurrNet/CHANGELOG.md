@@ -1,3 +1,10 @@
+# [1.24.0-beta.18](https://github.com/PurrNet/PurrNet/compare/v1.24.0-beta.17...v1.24.0-beta.18) (2026-09-28)
+
+
+### Bug Fixes
+
+* parent traversal could walk the path on newly spawned networked prefabs causing them to nest weirdly ([e1c15d8](https://github.com/PurrNet/PurrNet/commit/e1c15d883b34e898e7a132c9772c5db5a4e0d30b))
+
 # [1.24.0-beta.17](https://github.com/PurrNet/PurrNet/compare/v1.24.0-beta.16...v1.24.0-beta.17) (2026-09-27)
 
 
