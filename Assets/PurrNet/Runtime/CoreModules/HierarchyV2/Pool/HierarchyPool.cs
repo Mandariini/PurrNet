@@ -1092,10 +1092,11 @@ namespace PurrNet.Modules
             {
                 var siblingIndex = inversedPath[i];
 
-                if (parent.childCount <= siblingIndex)
+                if (parent.childCount <= siblingIndex || parent.GetChild(siblingIndex).TryGetComponent<NetworkIdentity>(out _))
                 {
                     PurrLogger.LogWarning($"Parent {parent} doesn't have child with index {siblingIndex}");
-                    break;
+                    instance.SetParent(parent, worldPositionStays);
+                    return;
                 }
 
                 var sibling = parent.GetChild(siblingIndex);

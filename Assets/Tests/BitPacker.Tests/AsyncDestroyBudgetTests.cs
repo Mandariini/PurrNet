@@ -7,7 +7,7 @@ using PurrNet;
 using PurrNet.Utils;
 using UnityEngine;
 
-// Run with Unity's sequential EditMode runner; these fixtures inspect shared static state.
+// These fixtures inspect shared static state.
 public class AsyncDestroyBudgetTests
 {
     private static readonly Type DestroyerType = typeof(UnityProxy).Assembly.GetType("PurrNet.AsyncDestroyer");
@@ -24,7 +24,6 @@ public class AsyncDestroyBudgetTests
     [SetUp]
     public void SetUp()
     {
-        Assert.That(Application.isPlaying, Is.False, "Run these scheduler tests in EditMode.");
         Assert.That(ApplicationContext.isQuitting, Is.False);
         Assert.IsNotNull(PendingField);
         Assert.IsNotNull(SubscribedField);

@@ -2026,6 +2026,7 @@ GameObject:
   - component: {fileID: 1680343690}
   - component: {fileID: 1680343691}
   - component: {fileID: 1680343699}
+  - component: {fileID: 1680343800}
   m_Layer: 0
   m_Name: Lifetimes
   m_TagString: Untagged
@@ -2798,6 +2799,22 @@ MonoBehaviour:
   m_EditorClassIdentifier: PurrNet.PlayModeTests::NonPooledRuntimeHierarchyScenario
   _cycles: 6
   _instancesPerCycle: 6
+  _spawnTimeoutSeconds: 20
+  _despawnTimeoutSeconds: 20
+  _barrierTimeoutSeconds: 60
+--- !u!114 &1680343800
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1680343622}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1d6123929fa679fa76a40dca2d8d7aee, type: 3}
+  m_Name:
+  m_EditorClassIdentifier: PurrNet.PlayModeTests::ServerOnlyHolderScenario
+  _itemsPerHolder: 4
   _spawnTimeoutSeconds: 20
   _despawnTimeoutSeconds: 20
   _barrierTimeoutSeconds: 60
