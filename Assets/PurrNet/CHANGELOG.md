@@ -1,3 +1,11 @@
+# [1.24.0-beta.20](https://github.com/PurrNet/PurrNet/compare/v1.24.0-beta.19...v1.24.0-beta.20) (2026-09-28)
+
+
+### Bug Fixes
+
+* don't trust senderId from client for RPC authorization ([073c051](https://github.com/PurrNet/PurrNet/commit/073c051451865b0066f5b0813970ecb6d6e8177c))
+* scrub forged senderId from packet ([e8b21e7](https://github.com/PurrNet/PurrNet/commit/e8b21e7a9bba8f404ad6610dc9cee0417dd2c3cf))
+
 # [1.24.0-beta.19](https://github.com/PurrNet/PurrNet/compare/v1.24.0-beta.18...v1.24.0-beta.19) (2026-09-28)
 
 
