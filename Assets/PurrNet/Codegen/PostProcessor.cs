@@ -4004,6 +4004,9 @@ namespace PurrNet.Codegen
                     return null!;
                 }
 
+                GenerateDeltaSerializersProcessor.inlinedDeltaReadMethods?.Clear();
+                GenerateDeltaSerializersProcessor.inlinedDeltaWriteMethods?.Clear();
+
                 PurrNetSettings settings;
                 using (profile?.Measure(IlppProfile.Phase.SettingsRead))
                     settings = PurrNetSettings.GetOrCreateSettings();
