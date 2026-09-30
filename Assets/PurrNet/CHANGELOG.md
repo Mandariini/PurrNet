@@ -1,3 +1,25 @@
+# [1.24.0-beta.21](https://github.com/PurrNet/PurrNet/compare/v1.24.0-beta.20...v1.24.0-beta.21) (2026-09-28)
+
+
+### Performance Improvements
+
+* RLE compressed ownership change packing ([1127ec3](https://github.com/PurrNet/PurrNet/commit/1127ec36e0b03c167489347a00ad54e2fb061240))
+
+# [1.24.0-beta.20](https://github.com/PurrNet/PurrNet/compare/v1.24.0-beta.19...v1.24.0-beta.20) (2026-09-28)
+
+
+### Bug Fixes
+
+* don't trust senderId from client for RPC authorization ([073c051](https://github.com/PurrNet/PurrNet/commit/073c051451865b0066f5b0813970ecb6d6e8177c))
+* scrub forged senderId from packet ([e8b21e7](https://github.com/PurrNet/PurrNet/commit/e8b21e7a9bba8f404ad6610dc9cee0417dd2c3cf))
+
+# [1.24.0-beta.19](https://github.com/PurrNet/PurrNet/compare/v1.24.0-beta.18...v1.24.0-beta.19) (2026-09-28)
+
+
+### Performance Improvements
+
+* NetworkTransform idle cost is measured around 10x lower ([563ba91](https://github.com/PurrNet/PurrNet/commit/563ba912390dd4912208dbdd551d35499fc2c8a0))
+
 # [1.24.0-beta.18](https://github.com/PurrNet/PurrNet/compare/v1.24.0-beta.17...v1.24.0-beta.18) (2026-09-28)
 
 
