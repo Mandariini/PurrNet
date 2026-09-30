@@ -1,3 +1,10 @@
+# [1.24.0-beta.23](https://github.com/PurrNet/PurrNet/compare/v1.24.0-beta.22...v1.24.0-beta.23) (2026-09-30)
+
+
+### Bug Fixes
+
+* SyncVar class value comparison ([5ba7b78](https://github.com/PurrNet/PurrNet/commit/5ba7b78a9a1300cc4e852b2272c2fc3fbed7d36c))
+
 # [1.24.0-beta.22](https://github.com/PurrNet/PurrNet/compare/v1.24.0-beta.21...v1.24.0-beta.22) (2026-09-30)
 
 
