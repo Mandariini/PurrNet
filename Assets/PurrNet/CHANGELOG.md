@@ -1,3 +1,10 @@
+# [1.24.0-beta.24](https://github.com/PurrNet/PurrNet/compare/v1.24.0-beta.23...v1.24.0-beta.24) (2026-10-01)
+
+
+### Bug Fixes
+
+* codegen bug on IL2CPP ([b7f8192](https://github.com/PurrNet/PurrNet/commit/b7f8192708c9d0a8381986a95d7afb4c09129c0c))
+
 # [1.24.0-beta.23](https://github.com/PurrNet/PurrNet/compare/v1.24.0-beta.22...v1.24.0-beta.23) (2026-09-30)
 
 
