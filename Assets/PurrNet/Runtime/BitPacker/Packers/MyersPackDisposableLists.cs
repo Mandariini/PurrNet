@@ -52,7 +52,7 @@ namespace PurrNet.Packing
         [UsedByIL]
         public static void ReadDisposableDeltaList<T>(BitPacker packer, DisposableList<T> old, ref DisposableList<T> value)
         {
-            if (!DeltaReadingScope.Continue(packer, old, ref value))
+            if (!DeltaReadingScope.ContinueDisposable(packer, old, ref value))
                 return;
 
             if (!packer.ReadBit())

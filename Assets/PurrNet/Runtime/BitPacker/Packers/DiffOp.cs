@@ -160,7 +160,7 @@ namespace PurrNet.Packing
         [UsedByIL]
         public static void DeltaRead<T>(this BitPacker packer, DiffOp<T> old, ref DiffOp<T> newVal)
         {
-            if (!DeltaReadingScope.Continue(packer, old, ref newVal))
+            if (!DeltaReadingScope.ContinueDisposable(packer, old, ref newVal))
                 return;
 
             packer.ReadOperation<T>(ref newVal);

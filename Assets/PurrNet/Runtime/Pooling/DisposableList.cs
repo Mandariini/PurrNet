@@ -186,6 +186,13 @@ namespace PurrNet.Pooling
             NotifyUsage();
         }
 
+        public void AddRange(DisposableList<T> collection)
+        {
+            if (isDisposed || collection.isDisposed) throw new ObjectDisposedException(nameof(DisposableList<T>));
+            _list.AddRange(collection._list);
+            NotifyUsage();
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void NotifyUsage()
         {
@@ -356,6 +363,13 @@ namespace PurrNet.Pooling
                 throw new IndexOutOfRangeException($"Index {opIndex} is out of range for list of size {_list.Count}.");
 
             _list.RemoveRange(opIndex, opLength);
+        }
+
+        public void InsertRange(int index, DisposableList<T> values)
+        {
+            if (isDisposed || values.isDisposed) throw new ObjectDisposedException(nameof(DisposableList<T>));
+            NotifyUsage();
+            _list.InsertRange(index, values._list);
         }
 
         public void InsertRange(int index, IEnumerable<T> values)
