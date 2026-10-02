@@ -1,3 +1,10 @@
+# [1.24.0-beta.25](https://github.com/PurrNet/PurrNet/compare/v1.24.0-beta.24...v1.24.0-beta.25) (2026-10-02)
+
+
+### Performance Improvements
+
+* stop boxing DisposableList in delta packing ([51d6abd](https://github.com/PurrNet/PurrNet/commit/51d6abde0d532ab818cbc357d6646a319af0789f))
+
 # [1.24.0-beta.24](https://github.com/PurrNet/PurrNet/compare/v1.24.0-beta.23...v1.24.0-beta.24) (2026-10-01)
 
 
