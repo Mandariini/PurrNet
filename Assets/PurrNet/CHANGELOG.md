@@ -1,3 +1,10 @@
+# [1.24.0-beta.27](https://github.com/PurrNet/PurrNet/compare/v1.24.0-beta.26...v1.24.0-beta.27) (2026-10-03)
+
+
+### Bug Fixes
+
+* UTP silently dropping reliable packets when the send window is full ([fcaaae9](https://github.com/PurrNet/PurrNet/commit/fcaaae9d8c444905a74ddbbff2c34d9078947baa))
+
 # [1.24.0-beta.26](https://github.com/PurrNet/PurrNet/compare/v1.24.0-beta.25...v1.24.0-beta.26) (2026-10-03)
 
 
