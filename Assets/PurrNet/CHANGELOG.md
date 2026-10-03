@@ -1,3 +1,10 @@
+# [1.24.0-beta.26](https://github.com/PurrNet/PurrNet/compare/v1.24.0-beta.25...v1.24.0-beta.26) (2026-10-03)
+
+
+### Performance Improvements
+
+* ListPool and MyersPacking GC improvements ([731e77c](https://github.com/PurrNet/PurrNet/commit/731e77cd74b9e3362208b9c6b32ebb59cf4783c4))
+
 # [1.24.0-beta.25](https://github.com/PurrNet/PurrNet/compare/v1.24.0-beta.24...v1.24.0-beta.25) (2026-10-02)
 
 
