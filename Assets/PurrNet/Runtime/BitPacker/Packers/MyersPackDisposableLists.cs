@@ -61,13 +61,37 @@ namespace PurrNet.Packing
                 return;
             }
 
+            var changes = DisposableList<DiffOp<T>>.Create();
+            while (true)
+            {
+                var operation = Packer<DiffOp<T>>.Read(packer);
+                if (operation.type == OperationType.End)
+                {
+                    operation.Dispose();
+                    break;
+                }
+                changes.Add(operation);
+            }
+
+            int length = old.isDisposed ? (value.isDisposed ? 0 : value.Count) : old.Count;
+            int peak = length;
+            for (var i = 0; i < changes.Count; i++)
+            {
+                var change = changes[i];
+                length += change.type == OperationType.Delete ? -change.length : change.values.Count;
+                if (length > peak)
+                    peak = length;
+            }
+
             if (value.isDisposed)
             {
-                value = DisposableList<T>.Create();
+                value = DisposableList<T>.Create(peak);
             }
-            else if (!old.isDisposed && old.rawList == value.rawList)
+            else if (!old.isDisposed && (old.rawList == value.rawList || value.rawList.Capacity < peak))
             {
-                value = DisposableList<T>.Create();
+                if (old.rawList != value.rawList)
+                    value.Dispose();
+                value = DisposableList<T>.Create(peak);
             }
 
             if (!old.isDisposed)
@@ -79,18 +103,6 @@ namespace PurrNet.Packing
                         value.Add(PurrCopy<T>.Copy(old[i]));
                 }
                 else value.AddRange(old);
-            }
-
-            var changes = DisposableList<DiffOp<T>>.Create();
-            while (true)
-            {
-                var operation = Packer<DiffOp<T>>.Read(packer);
-                if (operation.type == OperationType.End)
-                {
-                    operation.Dispose();
-                    break;
-                }
-                changes.Add(operation);
             }
 
             if (changes.Count > 0)
