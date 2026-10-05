@@ -1,3 +1,10 @@
+# [1.24.0-beta.29](https://github.com/PurrNet/PurrNet/compare/v1.24.0-beta.28...v1.24.0-beta.29) (2026-10-05)
+
+
+### Features
+
+* EditorAttributes compatibility ([66ae01c](https://github.com/PurrNet/PurrNet/commit/66ae01c882a5b34f24ec31f2d5759dce8548e746))
+
 # [1.24.0-beta.28](https://github.com/PurrNet/PurrNet/compare/v1.24.0-beta.27...v1.24.0-beta.28) (2026-10-05)
 
 
