@@ -60,8 +60,10 @@ namespace PurrNet.Editor
                 {
                     var row = new VisualElement();
                     row.style.flexDirection = FlexDirection.Row;
-                    var key = new PropertyField(displayKeys.GetArrayElementAtIndex(i), string.Empty);
-                    var value = new PropertyField(displayValues.GetArrayElementAtIndex(i), string.Empty);
+                    var keyProperty = displayKeys.GetArrayElementAtIndex(i);
+                    var valueProperty = displayValues.GetArrayElementAtIndex(i);
+                    var key = AlchemyIntegration.CreatePropertyGUI(keyProperty, string.Empty) ?? new PropertyField(keyProperty, string.Empty);
+                    var value = AlchemyIntegration.CreatePropertyGUI(valueProperty, string.Empty) ?? new PropertyField(valueProperty, string.Empty);
                     key.style.flexGrow = value.style.flexGrow = 1;
                     key.style.flexBasis = value.style.flexBasis = 0;
                     row.Add(key);

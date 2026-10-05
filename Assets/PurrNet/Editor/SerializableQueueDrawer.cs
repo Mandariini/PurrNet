@@ -45,7 +45,8 @@ namespace PurrNet.Editor
                 rows.Clear();
                 for (int i = 0; i < count; i++)
                 {
-                    var field = new PropertyField(displayValues.GetArrayElementAtIndex(i), string.Empty);
+                    var elementProperty = displayValues.GetArrayElementAtIndex(i);
+                    var field = AlchemyIntegration.CreatePropertyGUI(elementProperty, string.Empty) ?? new PropertyField(elementProperty, string.Empty);
                     field.SetEnabled(false);
                     rows.Add(field);
                 }

@@ -20,7 +20,7 @@ namespace PurrNet
     {
         public override VisualElement CreateInspectorGUI()
         {
-            var root = EditorAttributesIntegration.CreateInspectorGUI(this);
+            var root = OptionalInspectorIntegration.CreateInspectorGUI(this);
             if (root == null)
                 return null;
             root.Add(new IMGUIContainer(DrawButtons));
@@ -33,7 +33,7 @@ namespace PurrNet
         protected virtual void OnDisable()
 #endif
         {
-            EditorAttributesIntegration.OnDisable(this);
+            OptionalInspectorIntegration.OnDisable(this);
 #if TRI_INSPECTOR_PACKAGE || ODIN_INSPECTOR
             base.OnDisable();
 #endif
@@ -41,7 +41,7 @@ namespace PurrNet
 
         protected virtual void OnSceneGUI()
         {
-            EditorAttributesIntegration.OnSceneGUI(this);
+            OptionalInspectorIntegration.OnSceneGUI(this);
         }
 
         public override void OnInspectorGUI()

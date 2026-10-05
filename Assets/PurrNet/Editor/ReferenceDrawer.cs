@@ -12,7 +12,8 @@ namespace PurrNet.Editor
         {
             var row = new VisualElement();
             row.style.flexDirection = FlexDirection.Row;
-            var reference = new PropertyField(property.FindPropertyRelative("_reference"), property.displayName);
+            var referenceProperty = property.FindPropertyRelative("_reference");
+            var reference = AlchemyIntegration.CreatePropertyGUI(referenceProperty, property.displayName) ?? new PropertyField(referenceProperty, property.displayName);
             reference.style.flexGrow = 1;
             row.Add(reference);
 

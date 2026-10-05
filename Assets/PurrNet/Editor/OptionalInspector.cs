@@ -11,7 +11,7 @@ namespace PurrNet.Editor
 
         public override VisualElement CreateInspectorGUI()
         {
-            var inspector = EditorAttributesIntegration.CreateInspectorGUI(this, editorAttributesExcludedProperties);
+            var inspector = OptionalInspectorIntegration.CreateInspectorGUI(this, editorAttributesExcludedProperties);
             if (inspector == null)
                 return null;
 
@@ -61,12 +61,12 @@ namespace PurrNet.Editor
 
         protected virtual void OnDisable()
         {
-            EditorAttributesIntegration.OnDisable(this);
+            OptionalInspectorIntegration.OnDisable(this);
         }
 
         protected virtual void OnSceneGUI()
         {
-            EditorAttributesIntegration.OnSceneGUI(this);
+            OptionalInspectorIntegration.OnSceneGUI(this);
         }
     }
 }

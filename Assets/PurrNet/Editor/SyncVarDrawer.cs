@@ -33,7 +33,8 @@ namespace PurrNet.Editor
 
                 if (copy.name != "_value")
                 {
-                    foldout.Add(new PropertyField(copy.Copy()));
+                    var child = copy.Copy();
+                    foldout.Add(AlchemyIntegration.CreatePropertyGUI(child) ?? new PropertyField(child));
                     continue;
                 }
 
@@ -50,19 +51,25 @@ namespace PurrNet.Editor
                 var valueProperty = copy.Copy();
                 var valueCopy = copy.Copy();
                 var valueEnd = valueCopy.GetEndProperty();
-                if (valueCopy.NextVisible(true) && !SerializedProperty.EqualContents(valueCopy, valueEnd))
+                var alchemyValue = AlchemyIntegration.CreatePropertyGUI(valueProperty, null, true);
+                if (alchemyValue != null)
+                {
+                    valueFields.Add(alchemyValue);
+                }
+                else if (valueCopy.NextVisible(true) && !SerializedProperty.EqualContents(valueCopy, valueEnd))
                 {
                     do
                     {
                         if (SerializedProperty.EqualContents(valueCopy, valueEnd))
                             break;
-                        valueFields.Add(new PropertyField(valueCopy.Copy()));
+                        var child = valueCopy.Copy();
+                        valueFields.Add(AlchemyIntegration.CreatePropertyGUI(child) ?? new PropertyField(child));
                     }
                     while (valueCopy.NextVisible(false));
                 }
                 else
                 {
-                    valueFields.Add(new PropertyField(valueProperty));
+                    valueFields.Add(AlchemyIntegration.CreatePropertyGUI(valueProperty) ?? new PropertyField(valueProperty));
                 }
 
                 void RefreshValueLock()
