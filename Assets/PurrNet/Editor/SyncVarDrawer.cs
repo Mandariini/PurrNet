@@ -1,7 +1,9 @@
 using System.Collections.Generic;
 using System.Reflection;
 using UnityEditor;
+using UnityEditor.UIElements;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 namespace PurrNet.Editor
 {
@@ -9,6 +11,74 @@ namespace PurrNet.Editor
     public class SyncVarDrawer : PropertyDrawer
     {
         private static readonly Dictionary<string, bool> _valueFoldoutStates = new();
+
+        public override VisualElement CreatePropertyGUI(SerializedProperty property)
+        {
+            var foldout = new Foldout { text = property.displayName, value = property.isExpanded };
+            foldout.RegisterValueChangedCallback(evt =>
+            {
+                if (evt.target == foldout)
+                    property.isExpanded = evt.newValue;
+            });
+
+            var copy = property.Copy();
+            var end = copy.GetEndProperty();
+            if (!copy.NextVisible(true))
+                return foldout;
+
+            do
+            {
+                if (SerializedProperty.EqualContents(copy, end))
+                    break;
+
+                if (copy.name != "_value")
+                {
+                    foldout.Add(new PropertyField(copy.Copy()));
+                    continue;
+                }
+
+                string foldoutKey = property.propertyPath + "._value";
+                _valueFoldoutStates.TryGetValue(foldoutKey, out bool isExpanded);
+                var valueFoldout = new Foldout { text = "Value", value = isExpanded };
+                valueFoldout.RegisterValueChangedCallback(evt =>
+                {
+                    if (evt.target == valueFoldout)
+                        _valueFoldoutStates[foldoutKey] = evt.newValue;
+                });
+
+                var valueFields = new VisualElement();
+                var valueProperty = copy.Copy();
+                var valueCopy = copy.Copy();
+                var valueEnd = valueCopy.GetEndProperty();
+                if (valueCopy.NextVisible(true) && !SerializedProperty.EqualContents(valueCopy, valueEnd))
+                {
+                    do
+                    {
+                        if (SerializedProperty.EqualContents(valueCopy, valueEnd))
+                            break;
+                        valueFields.Add(new PropertyField(valueCopy.Copy()));
+                    }
+                    while (valueCopy.NextVisible(false));
+                }
+                else
+                {
+                    valueFields.Add(new PropertyField(valueProperty));
+                }
+
+                void RefreshValueLock()
+                {
+                    valueFields.SetEnabled(!Application.isPlaying || !FieldIsLocked(valueProperty));
+                }
+
+                RefreshValueLock();
+                valueFields.schedule.Execute(RefreshValueLock).Every(100);
+                valueFoldout.Add(valueFields);
+                foldout.Add(valueFoldout);
+            }
+            while (copy.NextVisible(false));
+
+            return foldout;
+        }
 
         public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
         {
