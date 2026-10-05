@@ -1,3 +1,10 @@
+# [1.24.0-beta.30](https://github.com/PurrNet/PurrNet/compare/v1.24.0-beta.29...v1.24.0-beta.30) (2026-10-05)
+
+
+### Bug Fixes
+
+* IL code gen on CoreCLR ([42eff6f](https://github.com/PurrNet/PurrNet/commit/42eff6f3206c4a8593c716017a405f29e694f2ec))
+
 # [1.24.0-beta.29](https://github.com/PurrNet/PurrNet/compare/v1.24.0-beta.28...v1.24.0-beta.29) (2026-10-05)
 
 
