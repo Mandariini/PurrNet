@@ -1,3 +1,10 @@
+# [1.24.0-beta.31](https://github.com/PurrNet/PurrNet/compare/v1.24.0-beta.30...v1.24.0-beta.31) (2026-10-05)
+
+
+### Features
+
+* include Alchemy support (editor attributes sort of thing) ([b40657b](https://github.com/PurrNet/PurrNet/commit/b40657bb2e43f0c7c3a0785fe563381f39c1af78))
+
 # [1.24.0-beta.30](https://github.com/PurrNet/PurrNet/compare/v1.24.0-beta.29...v1.24.0-beta.30) (2026-10-05)
 
 
