@@ -1,3 +1,10 @@
+# [1.24.0-beta.28](https://github.com/PurrNet/PurrNet/compare/v1.24.0-beta.27...v1.24.0-beta.28) (2026-10-05)
+
+
+### Bug Fixes
+
+* security patches ([49d7d7f](https://github.com/PurrNet/PurrNet/commit/49d7d7f6b68bcc5b18a4092d6bfd0e299c6b59ae))
+
 # [1.24.0-beta.27](https://github.com/PurrNet/PurrNet/compare/v1.24.0-beta.26...v1.24.0-beta.27) (2026-10-03)
 
 
