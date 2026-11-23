@@ -33,11 +33,14 @@ namespace PurrNet
 
         private static void EnsureRunner()
         {
-            if (_runner)
+            // DontDestroyOnLoad only works in Play Mode; outside it the runner would land in the edited scene.
+            if (_runner || !Application.isPlaying)
                 return;
 
             var go = new GameObject("[PurrNet] OnGUI");
-            go.hideFlags = HideFlags.HideAndDontSave;
+            // Not DontSave: Unity keeps DontSave objects when Play Mode exits, so each session would
+            // leave a runner behind that keeps invoking _onGUI. Without it, the runner dies with the session.
+            go.hideFlags = HideFlags.HideInHierarchy | HideFlags.NotEditable;
             UnityEngine.Object.DontDestroyOnLoad(go);
             _runner = go.AddComponent<PurrOnGUIRunner>();
         }

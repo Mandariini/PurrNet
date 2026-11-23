@@ -40,7 +40,9 @@ namespace PurrNet
 
             var go = new GameObject("PurrNet_UnityUpdate")
             {
-                hideFlags = HideFlags.HideAndDontSave
+                // Not DontSave: Unity keeps DontSave objects when Play Mode exits, so they pile up
+                // across sessions. Without it, the runner is destroyed with the session.
+                hideFlags = HideFlags.HideInHierarchy | HideFlags.NotEditable
             };
             DontDestroyOnLoad(go);
 

@@ -65,12 +65,14 @@ namespace PurrNet.Modules
             if (_pools.TryGetValue(prefabs, out var pool))
                 return pool;
 
+            // Not DontSave: Unity keeps DontSave objects when Play Mode exits, and after a domain reload
+            // nothing disposes this pool, so its parent would pile up. Without it, the parent dies with the session.
             var poolParent = new GameObject($"PurrNetPool-{_pools.Count}")
             {
 #if PURRNET_DEBUG_POOLING
-                hideFlags = HideFlags.DontSave
+                hideFlags = HideFlags.None
 #else
-                hideFlags = HideFlags.HideAndDontSave
+                hideFlags = HideFlags.HideInHierarchy | HideFlags.NotEditable
 #endif
             };
             poolParent.AddComponent<PurrNetPoolRoot>();
